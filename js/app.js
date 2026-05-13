@@ -270,7 +270,7 @@ function updateChart() {
     font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', size: 12 }
   };
 
-  const config = { responsive: true, displayModeBar: false };
+  const config = { responsive: true, displayModeBar: false, showTips: false };
 
   if (AppState.chartInitialized) {
     Plotly.react(container, traces, layout, config);
