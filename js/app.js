@@ -335,10 +335,18 @@ function calcPnlBounds(legs, S) {
 function applyPnlStats(gainEl, lossEl, gainLabelEl, lossLabelEl, hi, lo, netCallDir) {
   const fmt = v => (v >= 0 ? '+' : '') + fmtChart(v);
 
-  gainLabelEl.textContent = 'Max Gain';
-  gainEl.textContent  = netCallDir > 0 ? '+∞' : fmt(hi);
-  gainEl.className    = 'pnl-stat-value pnl-gain';
+  // hi side: Max Gain (≥0) or Min Loss (<0, always losing)
+  if (hi < 0) {
+    gainLabelEl.textContent = 'Min Loss';
+    gainEl.textContent  = fmtChart(hi);
+    gainEl.className    = 'pnl-stat-value pnl-loss';
+  } else {
+    gainLabelEl.textContent = 'Max Gain';
+    gainEl.textContent  = netCallDir > 0 ? '+∞' : fmt(hi);
+    gainEl.className    = 'pnl-stat-value pnl-gain';
+  }
 
+  // lo side: Min Gain (>0, always gaining) or Max Loss (≤0)
   if (lo > 0) {
     lossLabelEl.textContent = 'Min Gain';
     lossEl.textContent  = fmt(lo);
@@ -797,8 +805,8 @@ async function exportStrategyImage() {
     if (expLo > expHi) { const tmp = expLo; expLo = expHi; expHi = tmp; }
     const netCallDir = legs.reduce((s, l) => l.type === 'call' ? s + (l.direction === 'buy' ? 1 : -1) : s, 0);
     const fmt = v => (v >= 0 ? '+' : '') + fmtChart(v);
-    const maxGainLabel = 'Max Gain';
-    const maxGainStr   = netCallDir > 0 ? '+∞' : fmt(expHi);
+    const maxGainLabel = expHi < 0 ? 'Min Loss' : 'Max Gain';
+    const maxGainStr   = expHi < 0 ? fmtChart(expHi) : (netCallDir > 0 ? '+∞' : fmt(expHi));
     const maxLossLabel = expLo > 0 ? 'Min Gain' : 'Max Loss';
     const maxLossStr   = expLo > 0 ? fmt(expLo) : (netCallDir < 0 ? '-∞' : fmtChart(expLo));
     const breakevenStr = exportBreakevens.length > 0
@@ -929,8 +937,8 @@ async function exportStrategyImage() {
     const labelY = infoY - Math.round(INFO_H * 0.28);
     const valueY = infoY + Math.round(INFO_H * 0.08);
     [
-      { label: maxGainLabel, value: maxGainStr, color: netCallDir > 0 ? C.buy : (expHi >= 0 ? C.buy : C.sell) },
-      { label: maxLossLabel, value: maxLossStr, color: expLo > 0 ? C.buy : (netCallDir < 0 ? C.sell : C.sell) },
+      { label: maxGainLabel, value: maxGainStr, color: expHi < 0 ? C.sell : C.buy },
+      { label: maxLossLabel, value: maxLossStr, color: expLo > 0 ? C.buy : C.sell },
       { label: 'Breakeven', value: breakevenStr, color: C.text },
     ].forEach(({ label, value, color }, i) => {
       const x = statsStartX + i * statsColW;
