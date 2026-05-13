@@ -129,13 +129,15 @@ function calcCombinedPnL(legs, S) {
 // ── Breakeven Finder ──
 function findBreakevens(prices, pnl) {
   const result = [];
-  const priceStep = prices.length > 1 ? (prices[prices.length - 1] - prices[0]) / (prices.length - 1) : 1;
   // Round to 2dp for comparison so floating-point near-zero counts as zero
   const r = pnl.map(v => Math.round(v * 100) / 100);
+  // Dedup threshold: 0.05% of mid-price, guards against BS numerical noise near breakeven
+  const midPrice = (prices[0] + prices[prices.length - 1]) / 2;
+  const minDist = midPrice * 0.0005;
 
   const addBP = bp => {
     const rounded = Math.round(bp * 100) / 100;
-    if (result.length === 0 || Math.abs(rounded - result[result.length - 1]) > priceStep * 0.5) {
+    if (result.length === 0 || Math.abs(rounded - result[result.length - 1]) > minDist) {
       result.push(rounded);
     }
   };
@@ -823,6 +825,20 @@ async function exportStrategyImage() {
       ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + lineLen, ly); ctx.stroke();
       ctx.setLineDash([]);
     }, 'Current Price', '@' + fmtChart(S));
+
+    // Strategy name
+    const strategyName = AppState.activeStrategyName || 'Customized Strategy';
+    ly += Math.round(itemGap * 0.3);
+    ctx.strokeStyle = C.border; ctx.lineWidth = 1; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(LEGEND_W - lx, ly); ctx.stroke();
+    ly += Math.round(itemGap * 0.5);
+    ctx.font = `bold ${FS.sm}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+    ctx.fillStyle = C.muted;
+    ctx.fillText('Strategy', lx, ly);
+    ly += Math.round(itemGap * 0.6);
+    ctx.font = `${FS.xs}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+    ctx.fillStyle = C.text;
+    ctx.fillText(strategyName, lx, ly);
 
     // ── Separator ──
     ctx.strokeStyle = C.nav; ctx.lineWidth = 2; ctx.setLineDash([]);
