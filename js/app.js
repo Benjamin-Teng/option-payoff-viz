@@ -52,7 +52,7 @@ function getTXOSettlementDates() {
 const MAX_LEGS = 4;
 const DEFAULT_SIGMA = 0.20;
 const DEFAULT_R = 0.02;
-const CHART_POINTS = 300;
+const CHART_POINTS = 6000;
 const TARGET_MAX_PNL = 300; // reference P&L at BASE_UNDERLYING
 const BASE_UNDERLYING = 30000;
 

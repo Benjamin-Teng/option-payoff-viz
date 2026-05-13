@@ -49,13 +49,14 @@
       <div class="card global-input-card">
         <div class="field-label-row">
           <label class="field-label" for="underlying-price">Underlying Price <span class="required-star">*</span></label>
-          <a class="taifex-link" href="https://mis.taifex.com.tw/futures/RegularSession/EquityIndices/Options/" target="_blank" rel="noopener">臺指選擇權報價</a>
         </div>
         <div class="global-price-wrap">
           <input type="number" id="underlying-price" class="global-price-input"
                  placeholder="e.g. 22000" min="0" step="1" required>
           <span id="underlying-price-error" class="error-icon" style="display:none">!</span>
         </div>
+        <span class="field-hint">Required to anchor the chart</span>
+        <a class="taifex-link" href="https://mis.taifex.com.tw/futures/RegularSession/EquityIndices/Options/" target="_blank" rel="noopener"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> 臺指選擇權報價</a>
       </div>
 
       <!-- Leg Input Area -->
