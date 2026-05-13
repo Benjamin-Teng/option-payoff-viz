@@ -408,6 +408,7 @@ function bindLegEvents() {
   container.querySelectorAll('.btn-delete-leg').forEach(btn => {
     btn.addEventListener('click', () => {
       AppState.legs = AppState.legs.filter(l => l.id !== btn.dataset.legId);
+      AppState.activeStrategyName = null;
       renderLegs();
       updateChart();
     });
