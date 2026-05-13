@@ -150,6 +150,11 @@ body {
 
   .site-footer { display: none; }
 
+  .help-panel {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
   .chart-legend-mobile {
     display: flex;
     flex-wrap: wrap;
