@@ -21,6 +21,7 @@
 - **P&L 線性縮放**：以 S=30,000 為基準，依標的價格線性縮放 ±P&L 目標，適用各種標的規模
 - **希臘字母互動說明**：Strategy Guide 頁面提供 Black-Scholes 公式與希臘字母滑桿計算器
 - **說明浮動視窗**：內建英中術語對照表與互動圖操作說明
+- **RWD 響應式設計**：針對手機螢幕優化版面，圖例獨立顯示、互動圖自動適應畫面大小
 
 ### 技術架構
 
@@ -71,6 +72,7 @@ An interactive P&L visualization tool for options combination strategies. Built 
 - **P&L Scaling**: Linear P&L target based on underlying price (reference: ±300 at S=30,000)
 - **Greeks Calculator**: Interactive sliders for Black-Scholes Greeks on the Strategy Guide page
 - **Help Panel**: Built-in English–Chinese glossary and chart interaction guide
+- **Responsive Design (RWD)**: Mobile-optimized layout with adaptive chart sizing and standalone legend
 
 ### Tech Stack
 
