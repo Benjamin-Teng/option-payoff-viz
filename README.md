@@ -15,14 +15,15 @@
 ### 功能特色
 
 - **損益曲線**：即時計算並繪製最多 4 腳的組合策略損益
-- **快速策略**：內建 2-Leg、3-Leg、4-Leg 共 18 種常用策略預設，一鍵套用
+- **快速策略**：內建 2-Leg、3-Leg、4-Leg 共 20 種常用策略預設，一鍵套用
 - **Black-Scholes 定價**：有到期日的策略（如 Calendar Spread）使用 BS 模型計算時間價值
 - **損益兩平點**：自動偵測並以綠點標示於圖表轉折處
+- **Max Gain / Max Loss**：即時顯示策略的最大獲利與最大虧損，無上限時顯示 ±∞
 - **P&L 線性縮放**：以 S=30,000 為基準，依標的價格線性縮放 ±P&L 目標，適用各種標的規模
 - **希臘字母互動說明**：Greeks Explorer 頁面提供 Black-Scholes 公式與希臘字母滑桿計算器
 - **說明浮動視窗**：內建英中術語對照表與互動圖操作說明
-- **策略圖片輸出**：一鍵將損益曲線、圖例與腳位明細合成為 PNG 圖片下載，檔名自動對應策略名稱
-- **RWD 響應式設計**：針對手機螢幕優化版面，圖例獨立顯示、互動圖自動適應畫面大小
+- **策略圖片輸出**：一鍵將損益曲線、圖例、策略名稱、Max Gain / Max Loss / Breakeven 與組合明細輸出為 1400px PNG 圖片
+- **RWD 響應式設計**：針對手機螢幕優化版面，按鈕縮為 icon-only，圖例獨立顯示
 
 ### 技術架構
 
@@ -71,14 +72,15 @@ An interactive P&L visualization tool for options combination strategies. Built 
 ### Features
 
 - **Live P&L Chart**: Real-time payoff curve for up to 4-leg combinations
-- **Strategy Presets**: 18 built-in strategies across 2-Leg, 3-Leg, and 4-Leg categories
+- **Strategy Presets**: 20 built-in strategies across 2-Leg, 3-Leg, and 4-Leg categories
 - **Black-Scholes Pricing**: Calendar-type strategies use BS model for time value calculation
 - **Breakeven Detection**: Automatically marks breakeven points at curve inflection corners
+- **Max Gain / Max Loss**: Live display of maximum profit and loss; shows ±∞ for unbounded strategies
 - **P&L Scaling**: Linear P&L target based on underlying price (reference: ±300 at S=30,000)
 - **Greeks Calculator**: Interactive sliders for Black-Scholes Greeks on the Greeks Explorer page
 - **Help Panel**: Built-in English–Chinese glossary and chart interaction guide
-- **Image Export**: One-click export of the P&L chart, legend, and leg details as a PNG file; filename auto-matches the strategy name
-- **Responsive Design (RWD)**: Mobile-optimized layout with adaptive chart sizing and standalone legend
+- **Image Export**: One-click export as 1400px PNG — includes P&L chart, legend, strategy name, Max Gain / Max Loss / Breakeven, and leg table
+- **Responsive Design (RWD)**: Mobile-optimized layout with icon-only buttons and standalone legend
 
 ### Tech Stack
 

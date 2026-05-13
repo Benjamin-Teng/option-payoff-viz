@@ -317,18 +317,7 @@ function updateChart() {
 }
 
 // ── P&L Stats (Max Gain / Max Loss) ──
-function updatePnlStats(legs, S) {
-  const gainEl = document.getElementById('stat-max-gain');
-  const lossEl = document.getElementById('stat-max-loss');
-  if (!gainEl || !lossEl) return;
-
-  const reset = el => {
-    el.textContent = 'None';
-    el.className = 'pnl-stat-value pnl-none';
-  };
-
-  if (!legs.length || !S) { reset(gainEl); reset(lossEl); return; }
-
+function calcPnlBounds(legs, S) {
   const expRange = S * 0.3;
   const pts = 1000;
   const pnlArr = [];
@@ -336,15 +325,49 @@ function updatePnlStats(legs, S) {
     pnlArr.push(calcCombinedPnL(legs, (S - expRange) + 2 * expRange * i / pts));
   }
   const pnlNearZero = calcCombinedPnL(legs, 0.0001);
-  const trueMax = Math.max(Math.max(...pnlArr), pnlNearZero);
-  const trueMin = Math.min(Math.min(...pnlArr), pnlNearZero);
+  let hi = Math.max(Math.max(...pnlArr), pnlNearZero);
+  let lo = Math.min(Math.min(...pnlArr), pnlNearZero);
+  if (lo > hi) { const tmp = lo; lo = hi; hi = tmp; }
   const netCallDir = legs.reduce((s, l) => l.type === 'call' ? s + (l.direction === 'buy' ? 1 : -1) : s, 0);
+  return { hi, lo, netCallDir };
+}
 
-  gainEl.textContent = netCallDir > 0 ? '+∞' : (trueMax >= 0 ? '+' : '') + fmtChart(trueMax);
-  gainEl.className = 'pnl-stat-value pnl-gain';
+function applyPnlStats(gainEl, lossEl, gainLabelEl, lossLabelEl, hi, lo, netCallDir) {
+  const fmt = v => (v >= 0 ? '+' : '') + fmtChart(v);
 
-  lossEl.textContent = netCallDir < 0 ? '-∞' : fmtChart(trueMin);
-  lossEl.className = 'pnl-stat-value pnl-loss';
+  gainLabelEl.textContent = 'Max Gain';
+  gainEl.textContent  = netCallDir > 0 ? '+∞' : fmt(hi);
+  gainEl.className    = 'pnl-stat-value pnl-gain';
+
+  if (lo > 0) {
+    lossLabelEl.textContent = 'Min Gain';
+    lossEl.textContent  = fmt(lo);
+    lossEl.className    = 'pnl-stat-value pnl-gain';
+  } else {
+    lossLabelEl.textContent = 'Max Loss';
+    lossEl.textContent  = netCallDir < 0 ? '-∞' : fmtChart(lo);
+    lossEl.className    = 'pnl-stat-value pnl-loss';
+  }
+}
+
+function updatePnlStats(legs, S) {
+  const gainEl      = document.getElementById('stat-max-gain');
+  const lossEl      = document.getElementById('stat-max-loss');
+  const gainLabelEl = document.getElementById('stat-max-gain-label');
+  const lossLabelEl = document.getElementById('stat-max-loss-label');
+  if (!gainEl || !lossEl) return;
+
+  const reset = el => { el.textContent = 'None'; el.className = 'pnl-stat-value pnl-none'; };
+
+  if (!legs.length || !S) {
+    reset(gainEl); reset(lossEl);
+    if (gainLabelEl) gainLabelEl.textContent = 'Max Gain';
+    if (lossLabelEl) lossLabelEl.textContent = 'Max Loss';
+    return;
+  }
+
+  const { hi, lo, netCallDir } = calcPnlBounds(legs, S);
+  applyPnlStats(gainEl, lossEl, gainLabelEl, lossLabelEl, hi, lo, netCallDir);
 }
 
 // ── Leg Rendering ──
@@ -768,12 +791,16 @@ async function exportStrategyImage() {
     const exportBreakevens = findBreakevens(expPrices, expPnl);
 
     // Max Gain / Max Loss
-    const netCallDir = legs.reduce((s, l) => l.type === 'call' ? s + (l.direction === 'buy' ? 1 : -1) : s, 0);
     const pnlNearZero = calcCombinedPnL(legs, 0.0001);
-    const trueMax = Math.max(Math.max(...expPnl), pnlNearZero);
-    const trueMin = Math.min(Math.min(...expPnl), pnlNearZero);
-    const maxGainStr = netCallDir > 0 ? '+∞' : (trueMax >= 0 ? '+' : '') + fmtChart(trueMax);
-    const maxLossStr = netCallDir < 0 ? '-∞' : fmtChart(trueMin);
+    let expHi = Math.max(Math.max(...expPnl), pnlNearZero);
+    let expLo = Math.min(Math.min(...expPnl), pnlNearZero);
+    if (expLo > expHi) { const tmp = expLo; expLo = expHi; expHi = tmp; }
+    const netCallDir = legs.reduce((s, l) => l.type === 'call' ? s + (l.direction === 'buy' ? 1 : -1) : s, 0);
+    const fmt = v => (v >= 0 ? '+' : '') + fmtChart(v);
+    const maxGainLabel = 'Max Gain';
+    const maxGainStr   = netCallDir > 0 ? '+∞' : fmt(expHi);
+    const maxLossLabel = expLo > 0 ? 'Min Gain' : 'Max Loss';
+    const maxLossStr   = expLo > 0 ? fmt(expLo) : (netCallDir < 0 ? '-∞' : fmtChart(expLo));
     const breakevenStr = exportBreakevens.length > 0
       ? exportBreakevens.map(b => fmtChart(b)).join(' / ')
       : 'N/A';
@@ -902,8 +929,8 @@ async function exportStrategyImage() {
     const labelY = infoY - Math.round(INFO_H * 0.28);
     const valueY = infoY + Math.round(INFO_H * 0.08);
     [
-      { label: 'Max Gain',  value: maxGainStr,  color: netCallDir > 0 ? C.buy : (trueMax >= 0 ? C.buy : C.sell) },
-      { label: 'Max Loss',  value: maxLossStr,  color: netCallDir < 0 ? C.sell : (trueMin <= 0 ? C.sell : C.buy) },
+      { label: maxGainLabel, value: maxGainStr, color: netCallDir > 0 ? C.buy : (expHi >= 0 ? C.buy : C.sell) },
+      { label: maxLossLabel, value: maxLossStr, color: expLo > 0 ? C.buy : (netCallDir < 0 ? C.sell : C.sell) },
       { label: 'Breakeven', value: breakevenStr, color: C.text },
     ].forEach(({ label, value, color }, i) => {
       const x = statsStartX + i * statsColW;
