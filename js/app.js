@@ -82,7 +82,7 @@ function fmtChart(v) {
 function getStrikeRange() {
   const S = AppState.underlyingPrice;
   if (S && S > 0) {
-    const step = Math.max(0.01, parseFloat((S * 0.001).toFixed(2)));
+    const step = Math.max(0.01, parseFloat((S * 0.0002).toFixed(2)));
     return { min: parseFloat((S * 0.6).toFixed(2)), max: parseFloat((S * 1.4).toFixed(2)), step };
   }
   return { min: 10000, max: 40000, step: 50 };
@@ -97,7 +97,7 @@ function getPremiumStep() {
   const S = AppState.underlyingPrice;
   if (!S || S <= 0) return 1;
   const pmMax = getPremiumMax();
-  return Math.max(0.01, parseFloat((pmMax * 0.005).toFixed(2)));
+  return Math.max(0.01, parseFloat((pmMax * 0.001).toFixed(2)));
 }
 
 // ── P&L Calculation ──
