@@ -896,7 +896,7 @@ async function exportStrategyImage() {
     console.error('Export failed:', e);
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '&#8681; Export';
+    btn.innerHTML = '&#8681;<span class="btn-label"> Export</span>';
   }
 }
 
