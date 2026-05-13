@@ -125,6 +125,18 @@ body {
 }
 
 @media (max-width: 639px) {
+  html, body {
+    overflow: hidden;
+    height: 100%;
+  }
+
+  #page-guide {
+    overflow-y: auto;
+    height: calc(100vh - 52px);
+  }
+
+  .site-footer { display: none; }
+
   .chart-legend-mobile {
     display: flex;
     flex-wrap: wrap;
@@ -874,6 +886,33 @@ body {
 .footer-sep {
   margin: 0 8px;
 }
+.mobile-author {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .mobile-author {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 12px 0 4px;
+    font-size: 12px;
+    color: #94a3b8;
+  }
+  .mobile-author a {
+    display: flex;
+    align-items: center;
+    color: #94a3b8;
+    text-decoration: none;
+  }
+  .mobile-author a:hover {
+    color: var(--text-muted);
+    text-decoration: underline;
+  }
+}
+
 .footer-gh-icon {
   width: 14px;
   height: 14px;
