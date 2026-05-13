@@ -250,7 +250,7 @@ function updateChart() {
   }
 
   const layout = {
-    margin: { t: 16, r: 16, b: 48, l: 60 },
+    margin: { t: 16, r: 16, b: 110, l: 60 },
     xaxis: {
       title: { text: 'Underlying Price at Expiration', font: { size: 12 } },
       gridcolor: '#e2e8f0',
@@ -266,7 +266,7 @@ function updateChart() {
     paper_bgcolor: '#ffffff',
     plot_bgcolor: '#f8fafc',
     showlegend: true,
-    legend: { orientation: 'h', y: 1.08, x: 0, font: { size: 11 } },
+    legend: { orientation: 'h', y: -0.28, x: 0, xanchor: 'left', font: { size: 11 } },
     font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', size: 12 }
   };
 
