@@ -252,6 +252,17 @@ body {
   color: var(--text-muted);
 }
 
+.taifex-link {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--nav-bg);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.taifex-link:hover {
+  text-decoration: underline;
+}
+
 .global-price-input {
   flex: 1;
   max-width: 200px;
