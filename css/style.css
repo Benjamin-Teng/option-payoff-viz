@@ -32,7 +32,8 @@ body {
   justify-content: space-between;
   background: var(--nav-bg);
   padding: 0 20px;
-  height: 52px;
+  padding-top: env(safe-area-inset-top);
+  height: calc(52px + env(safe-area-inset-top));
   position: sticky;
   top: 0;
   z-index: 100;
@@ -74,7 +75,7 @@ body {
 #page-combination {
   display: none;
   flex-direction: column;
-  height: calc(100vh - 52px);
+  height: calc(100vh - 52px - env(safe-area-inset-top));
 }
 
 #page-combination.active {
@@ -132,7 +133,7 @@ body {
 
   #page-guide {
     overflow-y: auto;
-    height: calc(100vh - 52px);
+    height: calc(100vh - 52px - env(safe-area-inset-top));
   }
 
   .site-footer { display: none; }
