@@ -158,6 +158,35 @@ function findBreakevens(prices, pnl) {
   return result;
 }
 
+// ── Mobile Legend ──
+function renderMobileLegend(breakevens) {
+  const el = document.getElementById('chart-legend-mobile');
+  if (!el) return;
+  const mobile = window.innerWidth < 640;
+  if (!mobile) { el.innerHTML = ''; return; }
+
+  const line = (color, dash = false) =>
+    `<span style="display:inline-block;width:20px;height:${dash ? '0' : '2.5px'};` +
+    `${dash ? `border-top:1.5px dashed ${color}` : `background:${color}`};vertical-align:middle"></span>`;
+  const dot = color =>
+    `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};vertical-align:middle"></span>`;
+
+  const items = [
+    { icon: line('#2563eb'),    label: 'P&L' },
+    { icon: line('#94a3b8', true), label: 'Break-even' },
+  ];
+  if (breakevens && breakevens.length > 0)
+    items.push({ icon: dot('#16a34a'), label: 'Breakeven' });
+  if (AppState.underlyingPrice) {
+    items.push({ icon: line('#f59e0b', true), label: 'Current Price' });
+    items.push({ icon: dot('#f59e0b'),        label: `P&L @ ${fmtChart(AppState.underlyingPrice)}` });
+  }
+
+  el.innerHTML = items.map(i =>
+    `<span class="legend-item">${i.icon} ${i.label}</span>`
+  ).join('');
+}
+
 // ── Chart ──
 function updateChart() {
   const container = document.getElementById('payoff-chart');
@@ -169,6 +198,7 @@ function updateChart() {
       AppState.chartInitialized = false;
     }
     container.innerHTML = '<div class="chart-placeholder">Add at least one leg with Strike and Premium to see the P&L curve.</div>';
+    renderMobileLegend([]);
     return;
   }
 
@@ -251,7 +281,7 @@ function updateChart() {
 
   const mobile = window.innerWidth < 640;
   const layout = {
-    margin: { t: 16, r: 16, b: mobile ? 150 : 110, l: 60 },
+    margin: { t: 16, r: 16, b: mobile ? 60 : 110, l: 60 },
     xaxis: {
       title: { text: mobile ? 'Price at Expiry' : 'Underlying Price at Expiration', font: { size: mobile ? 11 : 12 } },
       gridcolor: '#e2e8f0',
@@ -266,8 +296,8 @@ function updateChart() {
     },
     paper_bgcolor: '#ffffff',
     plot_bgcolor: '#f8fafc',
-    showlegend: true,
-    legend: { orientation: 'h', y: mobile ? -0.50 : -0.28, x: 0, xanchor: 'left', font: { size: mobile ? 9 : 11 } },
+    showlegend: !mobile,
+    legend: { orientation: 'h', y: -0.28, x: 0, xanchor: 'left', font: { size: 11 } },
     font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', size: 12 }
   };
 
@@ -280,6 +310,8 @@ function updateChart() {
     Plotly.newPlot(container, traces, layout, config);
     AppState.chartInitialized = true;
   }
+
+  renderMobileLegend(breakevens);
 }
 
 // ── Leg Rendering ──

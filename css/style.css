@@ -118,6 +118,29 @@ body {
   flex: 1;
 }
 
+.chart-legend-mobile {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .chart-legend-mobile {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    padding: 4px 10px 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+}
+
 .input-section {
   flex: 1;
   overflow-y: auto;
