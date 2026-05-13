@@ -153,15 +153,6 @@ body {
 
   .site-footer { display: none; }
 
-  .help-panel {
-    top: calc(52px + env(safe-area-inset-top) + 8px);
-    left: 12px;
-    right: 12px;
-    width: auto;
-    max-height: calc(100vh - 52px - env(safe-area-inset-top) - 20px);
-    transform: none;
-  }
-
   .chart-legend-mobile {
     display: flex;
     flex-wrap: wrap;
@@ -877,6 +868,17 @@ body {
   .nav-brand { display: none; }
   .chart-section { flex: 0 0 35vh; }
   .preset-btn { font-size: 11px; padding: 5px 10px; }
+}
+
+@media (max-width: 639px) {
+  .help-panel {
+    top: calc(52px + env(safe-area-inset-top) + 8px);
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: calc(100vh - 52px - env(safe-area-inset-top) - 20px);
+    transform: none;
+  }
 }
 
 /* ── Empty Chart Placeholder ── */
