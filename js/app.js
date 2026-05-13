@@ -61,7 +61,8 @@ const AppState = {
   underlyingPrice: null,
   legs: [],
   activePresetCategory: '2-Leg',
-  chartInitialized: false
+  chartInitialized: false,
+  activeStrategyName: null
 };
 
 let legIdCounter = 0;
@@ -593,6 +594,7 @@ function applyPreset(name) {
   if (preset.legs.length > MAX_LEGS) return;
 
   AppState.legs = [];
+  AppState.activeStrategyName = name;
   renderLegs();
   if (preset.bounded) {
     const computed = computeBoundedLegs(preset, AppState.underlyingPrice);
@@ -660,6 +662,7 @@ function initAddLegBtn() {
       document.getElementById('underlying-price').focus();
       return;
     }
+    AppState.activeStrategyName = null;
     addLeg();
     renderLegs();
     updateChart();
@@ -670,6 +673,7 @@ function initAddLegBtn() {
 function initClearLegsBtn() {
   document.getElementById('clear-legs-btn').addEventListener('click', () => {
     AppState.legs = [];
+    AppState.activeStrategyName = null;
     renderLegs();
     updateChart();
   });
@@ -683,6 +687,220 @@ function initChartResetBtn() {
       Plotly.relayout(container, { 'xaxis.autorange': true, 'yaxis.autorange': true });
     }
   });
+}
+
+// ── Export Strategy Image ──
+async function exportStrategyImage() {
+  const S = AppState.underlyingPrice;
+  const legs = AppState.legs.filter(l => l.strike !== null && l.premium !== null);
+  if (!legs.length || !AppState.chartInitialized) return;
+
+  const btn = document.getElementById('export-btn');
+  btn.disabled = true;
+  btn.textContent = '…';
+
+  try {
+    const mobile = window.innerWidth < 640;
+    const dpr = mobile ? Math.min(window.devicePixelRatio || 1, 2) : 1;
+    const W = mobile ? Math.round(window.innerWidth * dpr) : Math.min(1400, window.innerWidth);
+
+    const LEGEND_W  = Math.round(W * 0.22);
+    const CHART_W   = W - LEGEND_W;
+    const CHART_H   = Math.round(W * 0.48);
+    const PAD       = Math.round(W * 0.025);
+    const ROW_H     = Math.round(W * 0.038);
+    const INFO_H    = Math.round(W * 0.065);
+    const hasExpiry = legs.some(l => l.expDate);
+    const COL_COUNT = hasExpiry ? 5 : 4;
+    const TABLE_H   = ROW_H + legs.length * ROW_H + PAD;
+    const H         = CHART_H + INFO_H + TABLE_H + PAD;
+
+    const FS = { xs: Math.max(9,  Math.round(W*0.010)),
+                 sm: Math.max(11, Math.round(W*0.013)),
+                 md: Math.max(13, Math.round(W*0.016)),
+                 lg: Math.max(16, Math.round(W*0.020)) };
+
+    const C = { bg:'#ffffff', nav:'#1e3a5f', text:'#1e293b', muted:'#64748b',
+                border:'#e2e8f0', row:'#f8fafc',
+                buy:'#16a34a', sell:'#dc2626', call:'#2563eb', put:'#7c3aed',
+                pnl:'#2563eb', zero:'#94a3b8', be:'#16a34a', price:'#f59e0b' };
+
+    // Compute breakevens for legend annotations
+    const expRange = S * 0.3;
+    const expPrices = [], expPnl = [];
+    for (let i = 0; i <= CHART_POINTS; i++) {
+      const sp = (S - expRange) + (2 * expRange * i / CHART_POINTS);
+      expPrices.push(sp);
+      expPnl.push(calcCombinedPnL(legs, sp));
+    }
+    const exportBreakevens = findBreakevens(expPrices, expPnl);
+
+    // Export chart without legend
+    const container = document.getElementById('payoff-chart');
+    const prevLegend = container.layout?.showlegend ?? !mobile;
+    const prevMarginB = container.layout?.margin?.b ?? (mobile ? 60 : 110);
+    await Plotly.relayout(container, { showlegend: false, 'margin.b': 40 });
+    const chartUrl = await Plotly.toImage(container, { format: 'png', width: CHART_W, height: CHART_H, scale: 1 });
+    await Plotly.relayout(container, { showlegend: prevLegend, 'margin.b': prevMarginB });
+
+    // Build canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Load and draw chart
+    await new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => { ctx.drawImage(img, LEGEND_W, 0, CHART_W, CHART_H); resolve(); };
+      img.src = chartUrl;
+    });
+
+    // ── Legend panel ──
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, LEGEND_W, CHART_H);
+    ctx.strokeStyle = C.border;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0, 0, LEGEND_W, CHART_H);
+
+    let ly = Math.round(CHART_H * 0.12);
+    const lx = Math.round(LEGEND_W * 0.10);
+    const itemGap = Math.round(CHART_H * 0.10);
+    const lineLen = Math.round(LEGEND_W * 0.30);
+
+    ctx.font = `bold ${FS.sm}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+    ctx.fillStyle = C.muted;
+    ctx.fillText('Legend', lx, ly);
+    ly += Math.round(itemGap * 0.7);
+
+    const drawLegendItem = (icon, label, sublabel) => {
+      icon();
+      const textX = lx + lineLen + Math.round(LEGEND_W * 0.06);
+      ctx.font = `${FS.xs}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      ctx.fillStyle = C.text;
+      ctx.fillText(label, textX, ly + 4);
+      if (sublabel) {
+        const subFS = Math.max(8, FS.xs - 1);
+        ctx.font = `${subFS}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+        ctx.fillStyle = C.muted;
+        ctx.fillText(sublabel, textX, ly + 4 + Math.round(subFS * 1.7));
+        ly += itemGap + Math.round(subFS * 1.7);
+      } else {
+        ly += itemGap;
+      }
+    };
+
+    // P&L line
+    drawLegendItem(() => {
+      ctx.strokeStyle = C.pnl; ctx.lineWidth = 2.5; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + lineLen, ly); ctx.stroke();
+    }, 'P&L');
+
+    // Zero line
+    drawLegendItem(() => {
+      ctx.strokeStyle = C.zero; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
+      ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + lineLen, ly); ctx.stroke();
+      ctx.setLineDash([]);
+    }, 'Break-even');
+
+    // Breakeven points
+    const beText = exportBreakevens.length > 0
+      ? exportBreakevens.map(b => '@' + fmtChart(b)).join('  ')
+      : null;
+    drawLegendItem(() => {
+      const cx = lx + lineLen / 2, r = Math.round(lineLen * 0.15);
+      ctx.fillStyle = C.be;
+      ctx.beginPath(); ctx.arc(cx, ly, r, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(cx, ly, r, 0, Math.PI * 2); ctx.stroke();
+    }, 'Breakeven', beText);
+
+    // Current price
+    drawLegendItem(() => {
+      ctx.strokeStyle = C.price; ctx.lineWidth = 1.5; ctx.setLineDash([2, 2]);
+      ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + lineLen, ly); ctx.stroke();
+      ctx.setLineDash([]);
+    }, 'Current Price', '@' + fmtChart(S));
+
+    // ── Separator ──
+    ctx.strokeStyle = C.nav; ctx.lineWidth = 2; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(0, CHART_H); ctx.lineTo(W, CHART_H); ctx.stroke();
+
+    // ── Info section ──
+    const infoY = CHART_H + Math.round(INFO_H * 0.55);
+    ctx.font = `bold ${FS.md}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+    ctx.fillStyle = C.text;
+    ctx.fillText(`Underlying Price: ${fmtChart(S)}`, PAD, infoY);
+    if (hasExpiry) {
+      const expiries = [...new Set(legs.filter(l => l.expDate).map(l => l.expDate))];
+      ctx.font = `${FS.sm}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      ctx.fillStyle = C.muted;
+      ctx.fillText(`Expiry: ${expiries.join(', ')}`, PAD, infoY + Math.round(INFO_H * 0.4));
+    }
+
+    // ── Table ──
+    const tableTop = CHART_H + INFO_H;
+    const colW = Math.round((W - PAD * 2) / COL_COUNT);
+    const cols = ['Direction', 'Type', 'Strike', 'Premium', ...(hasExpiry ? ['Expiry'] : [])];
+
+    // Header
+    ctx.fillStyle = C.nav;
+    ctx.fillRect(PAD, tableTop, W - PAD * 2, ROW_H);
+    ctx.font = `bold ${FS.sm}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+    ctx.fillStyle = '#ffffff';
+    cols.forEach((col, i) => {
+      ctx.fillText(col, PAD + i * colW + Math.round(colW * 0.06), tableTop + Math.round(ROW_H * 0.65));
+    });
+
+    // Rows
+    legs.forEach((leg, ri) => {
+      const ry = tableTop + ROW_H + ri * ROW_H;
+      ctx.fillStyle = ri % 2 === 0 ? C.bg : C.row;
+      ctx.fillRect(PAD, ry, W - PAD * 2, ROW_H);
+
+      const ty = ry + Math.round(ROW_H * 0.65);
+      const cells = [
+        { text: leg.direction === 'buy' ? 'Buy' : 'Sell',
+          color: leg.direction === 'buy' ? C.buy : C.sell },
+        { text: leg.type === 'call' ? 'Call' : 'Put',
+          color: leg.type === 'call' ? C.call : C.put },
+        { text: fmtChart(leg.strike),  color: C.text },
+        { text: fmtChart(leg.premium), color: C.text },
+        ...(hasExpiry ? [{ text: leg.expDate || '—', color: C.muted }] : [])
+      ];
+
+      cells.forEach((cell, ci) => {
+        ctx.font = `${ci < 2 ? 'bold ' : ''}${FS.sm}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+        ctx.fillStyle = cell.color;
+        ctx.fillText(cell.text, PAD + ci * colW + Math.round(colW * 0.06), ty);
+      });
+
+      // Row bottom border
+      ctx.strokeStyle = C.border; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(PAD, ry + ROW_H); ctx.lineTo(W - PAD, ry + ROW_H); ctx.stroke();
+    });
+
+    // Download — use preset name if available, else fallback
+    const rawName = AppState.activeStrategyName;
+    const filename = rawName
+      ? rawName.toLowerCase().replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-') + '.png'
+      : 'customized-option-strategy.png';
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+
+  } catch (e) {
+    console.error('Export failed:', e);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '&#8681; Export';
+  }
+}
+
+function initExportBtn() {
+  document.getElementById('export-btn').addEventListener('click', exportStrategyImage);
 }
 
 // ── Help Panel ──
@@ -715,6 +933,7 @@ function initApp() {
   initAddLegBtn();
   initClearLegsBtn();
   initChartResetBtn();
+  initExportBtn();
   initPresetTabs();
   initHelpPanel();
   renderLegs();

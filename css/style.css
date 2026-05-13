@@ -98,7 +98,7 @@ body {
 
 .chart-toolbar {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 6px 10px 0;
   flex-shrink: 0;
 }
@@ -118,6 +118,20 @@ body {
   background: #e2e8f0;
   border-color: #64748b;
 }
+
+.btn-export {
+  background: var(--nav-bg);
+  border: 1px solid var(--nav-bg);
+  border-radius: 5px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-export:hover  { background: #2a4f82; }
+.btn-export:disabled { opacity: 0.6; cursor: default; }
 
 #payoff-chart {
   width: 100%;
