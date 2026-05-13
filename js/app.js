@@ -701,8 +701,7 @@ async function exportStrategyImage() {
 
   try {
     const mobile = window.innerWidth < 640;
-    const dpr = mobile ? Math.min(window.devicePixelRatio || 1, 2) : 1;
-    const W = mobile ? Math.round(window.innerWidth * dpr) : Math.min(1400, window.innerWidth);
+    const W = 1400;
 
     const LEGEND_W  = Math.round(W * 0.22);
     const CHART_W   = W - LEGEND_W;
