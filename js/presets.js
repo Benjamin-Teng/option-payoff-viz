@@ -151,6 +151,16 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
+        name: 'Short Iron Condor',
+        bounded: true,
+        legs: [
+          { dir: 'sell', type: 'put',  strikeOffset: -1200 },
+          { dir: 'buy',  type: 'put',  strikeOffset:  -600 },
+          { dir: 'buy',  type: 'call', strikeOffset:  +600 },
+          { dir: 'sell', type: 'call', strikeOffset: +1200 }
+        ]
+      },
+      {
         name: 'Iron Butterfly',
         bounded: true,
         legs: [
@@ -161,23 +171,33 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
+        name: 'Short Iron Butterfly',
+        bounded: true,
+        legs: [
+          { dir: 'sell', type: 'put',  strikeOffset: -600 },
+          { dir: 'buy',  type: 'put',  strikeOffset:    0 },
+          { dir: 'buy',  type: 'call', strikeOffset:    0 },
+          { dir: 'sell', type: 'call', strikeOffset: +600 }
+        ]
+      },
+      {
         name: 'Butterfly (Call)',
         bounded: true,
         legs: [
-          { dir: 'buy',  type: 'call', strikeOffset: -600 },
-          { dir: 'sell', type: 'call', strikeOffset:    0 },
-          { dir: 'sell', type: 'call', strikeOffset:    0 },
-          { dir: 'buy',  type: 'call', strikeOffset: +600 }
+          { dir: 'buy',  type: 'call', strikeOffset: -300 },
+          { dir: 'sell', type: 'call', strikeOffset: +300 },
+          { dir: 'sell', type: 'call', strikeOffset: +300 },
+          { dir: 'buy',  type: 'call', strikeOffset: +900 }
         ]
       },
       {
         name: 'Butterfly (Put)',
         bounded: true,
         legs: [
-          { dir: 'buy',  type: 'put', strikeOffset: +600 },
-          { dir: 'sell', type: 'put', strikeOffset:    0 },
-          { dir: 'sell', type: 'put', strikeOffset:    0 },
-          { dir: 'buy',  type: 'put', strikeOffset: -600 }
+          { dir: 'buy',  type: 'put', strikeOffset: +300 },
+          { dir: 'sell', type: 'put', strikeOffset: -300 },
+          { dir: 'sell', type: 'put', strikeOffset: -300 },
+          { dir: 'buy',  type: 'put', strikeOffset: -900 }
         ]
       },
       {

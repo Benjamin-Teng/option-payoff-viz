@@ -81,16 +81,6 @@
   <div id="page-guide" class="page">
 
     <section class="guide-section card">
-      <h2>Black-Scholes Model</h2>
-      <div id="bs-formulas"></div>
-    </section>
-
-    <section class="guide-section card">
-      <h2>Greeks</h2>
-      <div id="greeks-formulas"></div>
-    </section>
-
-    <section class="guide-section card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)">
         <h2 style="margin:0;border:none;padding:0">Greek Letters Interactive</h2>
         <button id="greeks-reset-btn" class="btn-reset">Reset</button>
@@ -179,6 +169,16 @@
       </div>
     </section>
 
+    <section class="guide-section card">
+      <h2>Black-Scholes Model</h2>
+      <div id="bs-formulas"></div>
+    </section>
+
+    <section class="guide-section card">
+      <h2>Greeks</h2>
+      <div id="greeks-formulas"></div>
+    </section>
+
   </div>
 
   <!-- ── Help Panel ── -->
@@ -189,6 +189,16 @@
       <button id="help-close-btn" class="btn-help-close" title="關閉">✕</button>
     </div>
     <div class="help-panel-body">
+
+      <section class="help-section">
+        <h3>使用方式</h3>
+        <ol class="help-steps">
+          <li>在 <strong>Underlying Price</strong> 欄位輸入標的現貨價格（必填）</li>
+          <li>手動新增腳位（<strong>+ Add Leg</strong>），或從下方快速策略選單一鍵套用</li>
+          <li>調整各腳位的履約價（Strike）與權利金（Premium）</li>
+          <li>圖表即時更新損益曲線與損益兩平點</li>
+        </ol>
+      </section>
 
       <section class="help-section">
         <h3>互動圖操作</h3>
@@ -217,8 +227,8 @@
             <tr><td>Premium</td><td>權利金</td></tr>
             <tr><td>Call</td><td>買權</td></tr>
             <tr><td>Put</td><td>賣權</td></tr>
-            <tr><td>Buy</td><td>買入（做多）</td></tr>
-            <tr><td>Sell</td><td>賣出（做空）</td></tr>
+            <tr><td>Buy</td><td>買入</td></tr>
+            <tr><td>Sell</td><td>賣出</td></tr>
             <tr><td>Expiry Date</td><td>到期日</td></tr>
             <tr><td>P&amp;L</td><td>損益（Profit &amp; Loss）</td></tr>
             <tr><td>Breakeven</td><td>損益兩平點</td></tr>
@@ -248,6 +258,16 @@
 
     </div>
   </div>
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer">
+    <span>Author: Benjamin Teng</span>
+    <span class="footer-sep">·</span>
+    <a href="https://github.com/benjamin-teng/option-payoff-viz" target="_blank" rel="noopener">
+      <svg class="footer-gh-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      github.com/benjamin-teng
+    </a>
+  </footer>
 
   <!-- CDN Libraries -->
   <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
