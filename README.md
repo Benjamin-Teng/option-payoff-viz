@@ -31,6 +31,9 @@
 | 純前端 | HTML / CSS / JavaScript，無框架、無建置工具 |
 | 圖表 | [Plotly.js](https://plotly.com/javascript/) via CDN |
 | 數學排版 | [KaTeX](https://katex.org/) via CDN |
+| 圖片輸出 | HTML Canvas 2D API（合成損益圖 + 圖例 + 腳位表格） |
+| 社群預覽 | Open Graph Protocol meta tags + og-image.png |
+| og-image 產生 | Python [Pillow](https://python-pillow.org/)（開發期一次性腳本） |
 | 部署 | GitHub Pages |
 
 ### 本地開發
@@ -83,6 +86,9 @@ An interactive P&L visualization tool for options combination strategies. Built 
 | Frontend only | HTML / CSS / JavaScript — no framework, no build tool |
 | Chart | [Plotly.js](https://plotly.com/javascript/) via CDN |
 | Math rendering | [KaTeX](https://katex.org/) via CDN |
+| Image export | HTML Canvas 2D API (composites P&L chart + legend + leg table) |
+| Social preview | Open Graph Protocol meta tags + og-image.png |
+| og-image generation | Python [Pillow](https://python-pillow.org/) (one-time dev script) |
 | Deployment | GitHub Pages |
 
 ### Run Locally
