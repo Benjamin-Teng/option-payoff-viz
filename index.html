@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option Payoff Viz</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-brand-wrap">
+      <div class="nav-brand">Option Payoff Viz</div>
+      <button id="help-btn" class="btn-help" title="使用說明">📚 說明</button>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-page="combination">Option Combination</button>
+      <button class="nav-tab" data-page="guide">Option Strategy Guide</button>
+    </div>
+  </nav>
+
+  <!-- ── Option Combination Page ── -->
+  <div id="page-combination" class="page active">
+
+    <div class="chart-section">
+      <div id="payoff-chart"></div>
+    </div>
+
+    <div class="input-section">
+
+      <!-- Global Input -->
+      <div class="card global-input-card">
+        <div class="field-label-row">
+          <label class="field-label" for="underlying-price">Underlying Price <span class="required-star">*</span></label>
+          <span class="field-hint">Required to anchor the chart</span>
+        </div>
+        <div class="global-price-wrap">
+          <input type="number" id="underlying-price" class="global-price-input"
+                 placeholder="e.g. 22000" min="0" step="1" required>
+          <span id="underlying-price-error" class="error-icon" style="display:none">!</span>
+        </div>
+      </div>
+
+      <!-- Leg Input Area -->
+      <div class="card">
+        <div class="legs-header">
+          <div class="legs-header-left">
+            <span class="section-title">Option Legs <span id="leg-count">(0/4)</span></span>
+            <button id="clear-legs-btn" class="btn-clear-legs" disabled>Clear All</button>
+          </div>
+          <button id="add-leg-btn" class="btn-add-leg">+ Add Leg</button>
+        </div>
+        <div id="legs-container">
+          <div style="font-size:13px;color:#94a3b8;padding:8px 0;">
+            No legs added yet. Click <strong>+ Add Leg</strong> or choose a strategy below.
+          </div>
+        </div>
+      </div>
+
+      <!-- Strategy Preset Selector -->
+      <div class="card">
+        <div class="section-title">Quick Strategy</div>
+        <div class="preset-tabs">
+          <button class="preset-tab active" data-category="2-Leg">2-Leg</button>
+          <button class="preset-tab" data-category="3-Leg">3-Leg</button>
+          <button class="preset-tab" data-category="4-Leg">4-Leg</button>
+        </div>
+        <div id="preset-buttons" class="preset-buttons"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Option Strategy Guide Page ── -->
+  <div id="page-guide" class="page">
+
+    <section class="guide-section card">
+      <h2>Black-Scholes Model</h2>
+      <div id="bs-formulas"></div>
+    </section>
+
+    <section class="guide-section card">
+      <h2>Greeks</h2>
+      <div id="greeks-formulas"></div>
+    </section>
+
+    <section class="guide-section card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)">
+        <h2 style="margin:0;border:none;padding:0">Greek Letters Interactive</h2>
+        <button id="greeks-reset-btn" class="btn-reset">Reset</button>
+      </div>
+      <div class="greeks-interactive">
+
+        <div class="greek-controls">
+          <div class="greek-slider-row">
+            <label>S — Spot Price: <strong id="val-S">100</strong></label>
+            <input type="range" id="slider-S" min="50" max="200" value="100" step="1">
+          </div>
+          <div class="greek-slider-row">
+            <label>K — Strike Price: <strong id="val-K">100</strong></label>
+            <input type="range" id="slider-K" min="50" max="200" value="100" step="1">
+          </div>
+          <div class="greek-slider-row">
+            <label>σ — Volatility: <strong id="val-sigma">20</strong>%</label>
+            <input type="range" id="slider-sigma" min="1" max="100" value="20" step="1">
+          </div>
+          <div class="greek-slider-row">
+            <label>r — Risk-free Rate: <strong id="val-r">2.0</strong>%</label>
+            <input type="range" id="slider-r" min="0" max="10" value="2" step="0.1">
+          </div>
+          <div class="greek-slider-row">
+            <label>T — Days to Expiry: <strong id="val-T">30</strong></label>
+            <input type="range" id="slider-T" min="1" max="365" value="30" step="1">
+          </div>
+        </div>
+
+        <div class="greeks-output">
+          <div class="option-prices">
+            <div class="price-box call-box">
+              <div class="price-label">Call Price</div>
+              <div id="out-call-price" class="price-val">—</div>
+            </div>
+            <div class="price-box put-box">
+              <div class="price-label">Put Price</div>
+              <div id="out-put-price" class="price-val">—</div>
+            </div>
+          </div>
+
+          <table class="greeks-table">
+            <thead>
+              <tr>
+                <th>Greek</th>
+                <th>Call</th>
+                <th>Put</th>
+                <th>Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Δ Delta</td>
+                <td id="g-delta-c">—</td>
+                <td id="g-delta-p">—</td>
+                <td>∂Price / ∂S</td>
+              </tr>
+              <tr>
+                <td>Γ Gamma</td>
+                <td id="g-gamma-c">—</td>
+                <td id="g-gamma-p">—</td>
+                <td>∂²Price / ∂S²</td>
+              </tr>
+              <tr>
+                <td>ν Vega</td>
+                <td id="g-vega-c">—</td>
+                <td id="g-vega-p">—</td>
+                <td>∂Price / ∂σ (per 1%)</td>
+              </tr>
+              <tr>
+                <td>Θ Theta</td>
+                <td id="g-theta-c">—</td>
+                <td id="g-theta-p">—</td>
+                <td>∂Price / ∂T (per day)</td>
+              </tr>
+              <tr>
+                <td>ρ Rho</td>
+                <td id="g-rho-c">—</td>
+                <td id="g-rho-p">—</td>
+                <td>∂Price / ∂r (per 1%)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ── Help Panel ── -->
+  <div id="help-backdrop" class="help-backdrop hidden"></div>
+  <div id="help-panel" class="help-panel hidden" role="dialog" aria-modal="true" aria-label="使用說明">
+    <div class="help-panel-header">
+      <span class="help-panel-title">📚 使用說明</span>
+      <button id="help-close-btn" class="btn-help-close" title="關閉">✕</button>
+    </div>
+    <div class="help-panel-body">
+
+      <section class="help-section">
+        <h3>互動圖操作</h3>
+        <table class="help-table">
+          <tbody>
+            <tr><td class="help-action">滾輪上下滾動</td><td>縮放圖表</td></tr>
+            <tr><td class="help-action">點兩下圖表</td><td>重置觀看窗至原始範圍</td></tr>
+            <tr><td class="help-action">拖曳圖表空白處</td><td>平移視角（左右移動）</td></tr>
+            <tr><td class="help-action">框選區域（左鍵拖曳）</td><td>放大選取範圍</td></tr>
+            <tr><td class="help-action">懸停曲線</td><td>顯示該點的標的價格與損益</td></tr>
+            <tr><td class="help-action">點擊圖例項目</td><td>顯示 / 隱藏對應線條</td></tr>
+            <tr><td class="help-action">右上角工具列（懸停後出現）</td><td>截圖、縮放工具、重置視窗</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="help-section">
+        <h3>英中術語對照</h3>
+        <table class="help-table">
+          <thead><tr><th>英文</th><th>中文</th></tr></thead>
+          <tbody>
+            <tr><td>Underlying Price</td><td>標的資產價格</td></tr>
+            <tr><td>Spot Price</td><td>現貨價格（當前市場成交價）</td></tr>
+            <tr><td>Strike Price</td><td>履約價（行使選擇權的約定價格）</td></tr>
+            <tr><td>Premium</td><td>權利金</td></tr>
+            <tr><td>Call</td><td>買權</td></tr>
+            <tr><td>Put</td><td>賣權</td></tr>
+            <tr><td>Buy</td><td>買入（做多）</td></tr>
+            <tr><td>Sell</td><td>賣出（做空）</td></tr>
+            <tr><td>Expiry Date</td><td>到期日</td></tr>
+            <tr><td>P&amp;L</td><td>損益（Profit &amp; Loss）</td></tr>
+            <tr><td>Breakeven</td><td>損益兩平點</td></tr>
+            <tr><td>Bounded</td><td>有界（最大損益有限）</td></tr>
+            <tr><td>Unbounded</td><td>無界（損益無上限）</td></tr>
+            <tr><td>Bull / Bullish</td><td>看多 / 多頭</td></tr>
+            <tr><td>Bear / Bearish</td><td>看空 / 空頭</td></tr>
+            <tr><td>Spread</td><td>價差策略</td></tr>
+            <tr><td>Straddle</td><td>跨式策略</td></tr>
+            <tr><td>Strangle</td><td>勒式策略</td></tr>
+            <tr><td>Iron Condor</td><td>鐵禿鷹策略</td></tr>
+            <tr><td>Butterfly</td><td>蝶式策略</td></tr>
+            <tr><td>Calendar Spread</td><td>水平價差（跨月）</td></tr>
+            <tr><td>Synthetic Long/Short</td><td>合成多頭 / 空頭</td></tr>
+            <tr><td>Risk Reversal</td><td>風險逆轉策略</td></tr>
+            <tr><td>Ratio Spread</td><td>比例價差</td></tr>
+            <tr><td>Jade Lizard</td><td>玉蜥蜴策略</td></tr>
+            <tr><td>Greeks</td><td>希臘字母（選擇權風險參數）</td></tr>
+            <tr><td>Delta (Δ)</td><td>對標的價格的敏感度</td></tr>
+            <tr><td>Gamma (Γ)</td><td>Delta 的變化率</td></tr>
+            <tr><td>Vega (ν)</td><td>對波動率的敏感度</td></tr>
+            <tr><td>Theta (Θ)</td><td>時間價值每日衰減</td></tr>
+            <tr><td>Rho (ρ)</td><td>對利率的敏感度</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- CDN Libraries -->
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+  <!-- App -->
+  <script src="js/bs.js"></script>
+  <script src="js/presets.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/guide.js"></script>
+
+</body>
+</html>
