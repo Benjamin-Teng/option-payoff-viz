@@ -199,6 +199,7 @@ function updateChart() {
     }
     container.innerHTML = '<div class="chart-placeholder">Add at least one leg with Strike and Premium to see the P&L curve.</div>';
     renderMobileLegend([]);
+    updatePnlStats([], 0);
     return;
   }
 
@@ -312,6 +313,38 @@ function updateChart() {
   }
 
   renderMobileLegend(breakevens);
+  updatePnlStats(validLegs, S0);
+}
+
+// ── P&L Stats (Max Gain / Max Loss) ──
+function updatePnlStats(legs, S) {
+  const gainEl = document.getElementById('stat-max-gain');
+  const lossEl = document.getElementById('stat-max-loss');
+  if (!gainEl || !lossEl) return;
+
+  const reset = el => {
+    el.textContent = 'None';
+    el.className = 'pnl-stat-value pnl-none';
+  };
+
+  if (!legs.length || !S) { reset(gainEl); reset(lossEl); return; }
+
+  const expRange = S * 0.3;
+  const pts = 1000;
+  const pnlArr = [];
+  for (let i = 0; i <= pts; i++) {
+    pnlArr.push(calcCombinedPnL(legs, (S - expRange) + 2 * expRange * i / pts));
+  }
+  const pnlNearZero = calcCombinedPnL(legs, 0.0001);
+  const trueMax = Math.max(Math.max(...pnlArr), pnlNearZero);
+  const trueMin = Math.min(Math.min(...pnlArr), pnlNearZero);
+  const netCallDir = legs.reduce((s, l) => l.type === 'call' ? s + (l.direction === 'buy' ? 1 : -1) : s, 0);
+
+  gainEl.textContent = netCallDir > 0 ? '+∞' : (trueMax >= 0 ? '+' : '') + fmtChart(trueMax);
+  gainEl.className = 'pnl-stat-value pnl-gain';
+
+  lossEl.textContent = netCallDir < 0 ? '-∞' : fmtChart(trueMin);
+  lossEl.className = 'pnl-stat-value pnl-loss';
 }
 
 // ── Leg Rendering ──
@@ -734,6 +767,17 @@ async function exportStrategyImage() {
     }
     const exportBreakevens = findBreakevens(expPrices, expPnl);
 
+    // Max Gain / Max Loss
+    const netCallDir = legs.reduce((s, l) => l.type === 'call' ? s + (l.direction === 'buy' ? 1 : -1) : s, 0);
+    const pnlNearZero = calcCombinedPnL(legs, 0.0001);
+    const trueMax = Math.max(Math.max(...expPnl), pnlNearZero);
+    const trueMin = Math.min(Math.min(...expPnl), pnlNearZero);
+    const maxGainStr = netCallDir > 0 ? '+∞' : (trueMax >= 0 ? '+' : '') + fmtChart(trueMax);
+    const maxLossStr = netCallDir < 0 ? '-∞' : fmtChart(trueMin);
+    const breakevenStr = exportBreakevens.length > 0
+      ? exportBreakevens.map(b => fmtChart(b)).join(' / ')
+      : 'N/A';
+
     // Export chart without legend
     const container = document.getElementById('payoff-chart');
     const prevLegend = container.layout?.showlegend ?? !mobile;
@@ -851,6 +895,25 @@ async function exportStrategyImage() {
       ctx.fillStyle = C.muted;
       ctx.fillText(`Expiry: ${expiries.join(', ')}`, PAD, infoY + Math.round(INFO_H * 0.4));
     }
+
+    // Right-side stats: Max Gain | Max Loss | Breakeven
+    const statsStartX = Math.round(W * 0.38);
+    const statsColW   = Math.round((W - PAD - statsStartX) / 3);
+    const labelY = infoY - Math.round(INFO_H * 0.28);
+    const valueY = infoY + Math.round(INFO_H * 0.08);
+    [
+      { label: 'Max Gain',  value: maxGainStr,  color: netCallDir > 0 ? C.buy : (trueMax >= 0 ? C.buy : C.sell) },
+      { label: 'Max Loss',  value: maxLossStr,  color: netCallDir < 0 ? C.sell : (trueMin <= 0 ? C.sell : C.buy) },
+      { label: 'Breakeven', value: breakevenStr, color: C.text },
+    ].forEach(({ label, value, color }, i) => {
+      const x = statsStartX + i * statsColW;
+      ctx.font = `${FS.xs}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      ctx.fillStyle = C.muted;
+      ctx.fillText(label, x, labelY);
+      ctx.font = `bold ${FS.sm}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      ctx.fillStyle = color;
+      ctx.fillText(value, x, valueY);
+    });
 
     // ── Table ──
     const tableTop = CHART_H + INFO_H;

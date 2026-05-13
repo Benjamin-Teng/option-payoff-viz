@@ -201,6 +201,12 @@ body {
     font-size: 15px;
     flex-shrink: 0;
   }
+
+  .btn-add-leg,
+  .btn-clear-legs {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
 }
 
 .input-section {
@@ -347,6 +353,31 @@ body {
 }
 .btn-clear-legs:hover { background: #fee2e2; }
 .btn-clear-legs:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.pnl-stats {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.pnl-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.pnl-stat-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.pnl-stat-value {
+  font-size: 13px;
+  font-weight: 700;
+}
+.pnl-none  { color: #cbd5e1; }
+.pnl-gain  { color: var(--buy); }
+.pnl-loss  { color: var(--sell); }
 
 /* ── Leg Card ── */
 .leg-card {

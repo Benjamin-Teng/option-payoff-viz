@@ -19,7 +19,7 @@
 - **Black-Scholes 定價**：有到期日的策略（如 Calendar Spread）使用 BS 模型計算時間價值
 - **損益兩平點**：自動偵測並以綠點標示於圖表轉折處
 - **P&L 線性縮放**：以 S=30,000 為基準，依標的價格線性縮放 ±P&L 目標，適用各種標的規模
-- **希臘字母互動說明**：Strategy Guide 頁面提供 Black-Scholes 公式與希臘字母滑桿計算器
+- **希臘字母互動說明**：Greeks Explorer 頁面提供 Black-Scholes 公式與希臘字母滑桿計算器
 - **說明浮動視窗**：內建英中術語對照表與互動圖操作說明
 - **策略圖片輸出**：一鍵將損益曲線、圖例與腳位明細合成為 PNG 圖片下載，檔名自動對應策略名稱
 - **RWD 響應式設計**：針對手機螢幕優化版面，圖例獨立顯示、互動圖自動適應畫面大小
@@ -75,7 +75,7 @@ An interactive P&L visualization tool for options combination strategies. Built 
 - **Black-Scholes Pricing**: Calendar-type strategies use BS model for time value calculation
 - **Breakeven Detection**: Automatically marks breakeven points at curve inflection corners
 - **P&L Scaling**: Linear P&L target based on underlying price (reference: ±300 at S=30,000)
-- **Greeks Calculator**: Interactive sliders for Black-Scholes Greeks on the Strategy Guide page
+- **Greeks Calculator**: Interactive sliders for Black-Scholes Greeks on the Greeks Explorer page
 - **Help Panel**: Built-in English–Chinese glossary and chart interaction guide
 - **Image Export**: One-click export of the P&L chart, legend, and leg details as a PNG file; filename auto-matches the strategy name
 - **Responsive Design (RWD)**: Mobile-optimized layout with adaptive chart sizing and standalone legend
