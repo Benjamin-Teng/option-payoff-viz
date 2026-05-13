@@ -249,15 +249,16 @@ function updateChart() {
     });
   }
 
+  const mobile = window.innerWidth < 640;
   const layout = {
-    margin: { t: 16, r: 16, b: 110, l: 60 },
+    margin: { t: 16, r: 16, b: mobile ? 150 : 110, l: 60 },
     xaxis: {
-      title: { text: 'Underlying Price at Expiration', font: { size: 12 } },
+      title: { text: mobile ? 'Price at Expiry' : 'Underlying Price at Expiration', font: { size: mobile ? 11 : 12 } },
       gridcolor: '#e2e8f0',
       zeroline: false
     },
     yaxis: {
-      title: { text: 'Profit / Loss', font: { size: 12 } },
+      title: { text: 'P / L', font: { size: mobile ? 11 : 12 } },
       gridcolor: '#e2e8f0',
       zeroline: true,
       zerolinecolor: '#94a3b8',
@@ -266,7 +267,7 @@ function updateChart() {
     paper_bgcolor: '#ffffff',
     plot_bgcolor: '#f8fafc',
     showlegend: true,
-    legend: { orientation: 'h', y: -0.28, x: 0, xanchor: 'left', font: { size: 11 } },
+    legend: { orientation: 'h', y: mobile ? -0.50 : -0.28, x: 0, xanchor: 'left', font: { size: mobile ? 9 : 11 } },
     font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', size: 12 }
   };
 
@@ -667,6 +668,13 @@ function initHelpPanel() {
   backdrop.addEventListener('click', close);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 }
+
+// ── Resize Handler ──
+let _resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(updateChart, 200);
+});
 
 // ── Init ──
 function initApp() {
