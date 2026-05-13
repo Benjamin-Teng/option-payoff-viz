@@ -102,6 +102,14 @@ const STRATEGY_PRESETS = [
           { dir: 'sell', type: 'call', strikeOffset: 0, needsExpDate: true, expMonths: 1 },
           { dir: 'buy',  type: 'call', strikeOffset: 0, needsExpDate: true, expMonths: 2 }
         ]
+      },
+      {
+        name: 'Short Calendar Spread ⏱',
+        bounded: true,
+        legs: [
+          { dir: 'buy',  type: 'call', strikeOffset: 0, needsExpDate: true, expMonths: 1 },
+          { dir: 'sell', type: 'call', strikeOffset: 0, needsExpDate: true, expMonths: 2 }
+        ]
       }
     ]
   },
@@ -208,6 +216,16 @@ const STRATEGY_PRESETS = [
           { dir: 'buy',  type: 'call', strikeOffset: 0, needsExpDate: true, expMonths: 2 },
           { dir: 'sell', type: 'put',  strikeOffset: 0, needsExpDate: true, expMonths: 1 },
           { dir: 'buy',  type: 'put',  strikeOffset: 0, needsExpDate: true, expMonths: 2 }
+        ]
+      },
+      {
+        name: 'Short Double Calendar Spread ⏱',
+        bounded: true,
+        legs: [
+          { dir: 'buy',  type: 'call', strikeOffset: 0, needsExpDate: true, expMonths: 1 },
+          { dir: 'sell', type: 'call', strikeOffset: 0, needsExpDate: true, expMonths: 2 },
+          { dir: 'buy',  type: 'put',  strikeOffset: 0, needsExpDate: true, expMonths: 1 },
+          { dir: 'sell', type: 'put',  strikeOffset: 0, needsExpDate: true, expMonths: 2 }
         ]
       }
     ]
