@@ -128,37 +128,34 @@ function calcCombinedPnL(legs, S) {
 
 // ── Breakeven Finder ──
 function findBreakevens(prices, pnl) {
-  const result = [];
-  // Round to 2dp for comparison so floating-point near-zero counts as zero
-  const r = pnl.map(v => Math.round(v * 100) / 100);
-  // Dedup threshold: 0.05% of mid-price, guards against BS numerical noise near breakeven
+  // Cluster threshold: 0.2% of mid-price — absorbs BS numerical noise at any S scale
   const midPrice = (prices[0] + prices[prices.length - 1]) / 2;
-  const minDist = midPrice * 0.0005;
+  const minDist = midPrice * 0.002;
 
-  const addBP = bp => {
-    const rounded = Math.round(bp * 100) / 100;
-    if (result.length === 0 || Math.abs(rounded - result[result.length - 1]) > minDist) {
-      result.push(rounded);
+  // Use raw (unrounded) P&L for sign detection to avoid 2dp rounding creating
+  // artificial flat zero regions that generate spurious enter/exit events
+  const raw = [];
+  for (let i = 0; i < pnl.length - 1; i++) {
+    const a = pnl[i], b = pnl[i + 1];
+    if ((a > 0) !== (b > 0)) {
+      raw.push(prices[i] + (prices[i + 1] - prices[i]) * (-a) / (b - a));
     }
-  };
-
-  for (let i = 0; i < r.length - 1; i++) {
-    const a = r[i], b = r[i + 1];
-    if (a !== 0 && b !== 0 && (a > 0) !== (b > 0)) {
-      // Direct sign change: interpolate crossing
-      const x = prices[i] + (prices[i + 1] - prices[i]) * (-pnl[i]) / (pnl[i + 1] - pnl[i]);
-      addBP(x);
-    } else if (a !== 0 && b === 0) {
-      // Entering zero region: corner is at prices[i+1]
-      addBP(prices[i + 1]);
-    } else if (a === 0 && b !== 0) {
-      // Exiting zero region: corner is at prices[i]
-      addBP(prices[i]);
-    }
-    // Both zero: interior of flat region, skip
   }
 
-  return result;
+  // Cluster nearby candidates and return their average
+  const clusters = [];
+  for (const bp of raw) {
+    const last = clusters[clusters.length - 1];
+    if (!last || bp - last.sum / last.n > minDist) {
+      clusters.push({ sum: bp, n: 1 });
+    } else {
+      last.sum += bp;
+      last.n += 1;
+    }
+  }
+
+  // Round to 2dp only at output
+  return clusters.map(c => Math.round(c.sum / c.n * 100) / 100);
 }
 
 // ── Mobile Legend ──
