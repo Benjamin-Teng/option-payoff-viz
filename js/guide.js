@@ -3,24 +3,24 @@ const BS_FORMULAS = [
   {
     title: 'Call Option Price',
     latex: 'C = S \\cdot N(d_1) - K e^{-rT} N(d_2)',
-    note: 'Price of a European call option under Black-Scholes assumptions.'
+    note: '在 Black-Scholes 假設下，歐式買權的理論定價公式。'
   },
   {
     title: 'Put Option Price',
     latex: 'P = K e^{-rT} N(-d_2) - S \\cdot N(-d_1)',
-    note: 'Price of a European put option. Also derivable via put-call parity: P = C - S + Ke^{-rT}.',
+    note: '歐式賣權的理論定價公式。亦可由買賣權平價關係推導：P = C − S + Ke^{−rT}。',
     prereq: { text: 'Put-Call Parity', url: 'https://en.wikipedia.org/wiki/Put%E2%80%93call_parity' }
   },
   {
     title: 'd₁ and d₂',
     latex: 'd_1 = \\frac{\\ln(S/K) + \\left(r + \\frac{\\sigma^2}{2}\\right)T}{\\sigma\\sqrt{T}}, \\quad d_2 = d_1 - \\sigma\\sqrt{T}',
-    note: 'S = spot price, K = strike, r = risk-free rate, σ = volatility, T = time to expiry (years).',
+    note: 'S = 現貨價，K = 履約價，r = 無風險利率，σ = 波動率，T = 距到期時間（年）。',
     prereq: { text: 'Geometric Brownian Motion', url: 'https://en.wikipedia.org/wiki/Geometric_Brownian_motion' }
   },
   {
     title: 'Standard Normal CDF',
     latex: 'N(x) = \\frac{1}{\\sqrt{2\\pi}} \\int_{-\\infty}^{x} e^{-t^2/2}\\, dt',
-    note: 'N(d₁) represents the risk-adjusted probability the option expires in-the-money.',
+    note: 'N(d₁) 代表經風險調整後，選擇權到期時價內（in-the-money）的機率。',
     prereq: { text: 'Normal Distribution', url: 'https://en.wikipedia.org/wiki/Normal_distribution' }
   }
 ];
@@ -29,28 +29,28 @@ const GREEK_FORMULAS = [
   {
     title: 'Δ Delta — ∂Price/∂S',
     latex: '\\Delta_c = N(d_1), \\quad \\Delta_p = N(d_1) - 1',
-    note: 'Rate of change of option price with respect to the underlying price. Call delta ∈ (0,1), put delta ∈ (−1,0).'
+    note: '權利金相對標的價格的敏感度。買權 Delta ∈ (0, 1)，賣權 Delta ∈ (−1, 0)。'
   },
   {
     title: 'Γ Gamma — ∂²Price/∂S²',
     latex: '\\Gamma = \\frac{n(d_1)}{S\\,\\sigma\\sqrt{T}}',
-    note: 'Rate of change of delta. Identical for calls and puts. n(x) = N′(x) is the standard normal PDF.',
+    note: 'Delta 的變化率，買賣權相同。n(x) = N′(x) 為標準常態分佈的機率密度函數。',
     prereq: { text: 'Second-order Greeks', url: 'https://en.wikipedia.org/wiki/Greeks_(finance)#Gamma' }
   },
   {
     title: 'ν Vega — ∂Price/∂σ',
     latex: '\\nu = S\\, n(d_1)\\sqrt{T}',
-    note: 'Sensitivity to a 1-unit change in volatility. Identical for calls and puts. In practice quoted per 1% change.'
+    note: '權利金對波動率變動 1 單位的敏感度，買賣權相同。實務上通常以每 1% 波動率變動計算。'
   },
   {
     title: 'Θ Theta — ∂Price/∂T',
     latex: '\\Theta_c = -\\frac{S\\,n(d_1)\\,\\sigma}{2\\sqrt{T}} - rKe^{-rT}N(d_2)',
-    note: 'Time decay per calendar day. Theta is typically negative (options lose value as time passes).'
+    note: '每日時間價值的衰減量。Theta 通常為負值，代表隨時間流逝，選擇權價值逐漸減少。'
   },
   {
     title: 'ρ Rho — ∂Price/∂r',
     latex: '\\rho_c = KTe^{-rT}N(d_2), \\quad \\rho_p = -KTe^{-rT}N(-d_2)',
-    note: 'Sensitivity to a 1% change in the risk-free interest rate. Less significant for short-dated options.'
+    note: '權利金對無風險利率變動 1% 的敏感度。對短天期選擇權影響相對較小。'
   }
 ];
 
