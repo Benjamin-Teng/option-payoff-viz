@@ -642,6 +642,16 @@ function initClearLegsBtn() {
   });
 }
 
+// ── Chart Reset Button ──
+function initChartResetBtn() {
+  document.getElementById('chart-reset-btn').addEventListener('click', () => {
+    const container = document.getElementById('payoff-chart');
+    if (AppState.chartInitialized) {
+      Plotly.relayout(container, { 'xaxis.autorange': true, 'yaxis.autorange': true });
+    }
+  });
+}
+
 // ── Help Panel ──
 function initHelpPanel() {
   const panel    = document.getElementById('help-panel');
@@ -664,6 +674,7 @@ function initApp() {
   initGlobalInput();
   initAddLegBtn();
   initClearLegsBtn();
+  initChartResetBtn();
   initPresetTabs();
   initHelpPanel();
   renderLegs();
