@@ -134,9 +134,18 @@ body {
     height: 100%;
   }
 
-  #page-guide {
+  #page-combination.active,
+  #page-guide.active {
+    position: fixed;
+    top: calc(52px + env(safe-area-inset-top));
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: auto;
+  }
+
+  #page-guide.active {
     overflow-y: auto;
-    height: calc(100vh - 52px - env(safe-area-inset-top));
   }
 
   .site-footer { display: none; }
