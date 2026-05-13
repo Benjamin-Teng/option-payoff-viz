@@ -23,6 +23,7 @@ body {
   color: var(--text);
   font-size: 14px;
   min-height: 100vh;
+  padding-top: calc(52px + env(safe-area-inset-top));
 }
 
 /* ── Navbar ── */
@@ -34,8 +35,10 @@ body {
   padding: 0 20px;
   padding-top: env(safe-area-inset-top);
   height: calc(52px + env(safe-area-inset-top));
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
