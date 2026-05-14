@@ -161,12 +161,10 @@ function findBreakevens(prices, pnl) {
   return clusters.map(c => Math.round(c.sum / c.n * 100) / 100);
 }
 
-// ── Mobile Legend ──
+// ── Chart Legend (desktop + mobile) ──
 function renderMobileLegend(breakevens) {
   const el = document.getElementById('chart-legend-mobile');
   if (!el) return;
-  const mobile = window.innerWidth < 640;
-  if (!mobile) { el.innerHTML = ''; return; }
 
   const line = (color, dash = false) =>
     `<span style="display:inline-block;width:20px;height:${dash ? '0' : '2.5px'};` +
@@ -285,7 +283,7 @@ function updateChart() {
 
   const mobile = window.innerWidth < 640;
   const layout = {
-    margin: { t: 16, r: 16, b: mobile ? 60 : 110, l: 60 },
+    margin: { t: 16, r: 16, b: mobile ? 60 : 72, l: 60 },
     xaxis: {
       title: { text: mobile ? 'Price at Expiry' : 'Underlying Price at Expiration', font: { size: mobile ? 11 : 12 } },
       gridcolor: '#e2e8f0',
@@ -300,8 +298,7 @@ function updateChart() {
     },
     paper_bgcolor: '#ffffff',
     plot_bgcolor: '#f8fafc',
-    showlegend: !mobile,
-    legend: { orientation: 'h', y: -0.28, x: 0, xanchor: 'left', font: { size: 11 } },
+    showlegend: false,
     font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', size: 12 }
   };
 
