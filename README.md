@@ -24,7 +24,8 @@
 - **說明浮動視窗**：內建英中術語對照表與互動圖操作說明
 - **策略圖片輸出**：一鍵將損益曲線、圖例、策略名稱、Max Gain / Max Loss / Breakeven 與組合明細輸出為 1400px PNG 圖片
 - **RWD 響應式設計**：針對手機螢幕優化版面，按鈕縮為 icon-only，圖例獨立顯示
-- **Ghost-value 輸入體驗**：點擊 Strike / Premium 欄位時，原始值轉為灰色提示；輸入後立即更新圖表；Spinner 箭頭從有效值連續增減
+- **Ghost-value 輸入體驗**：點擊履約價 / 權利金欄位時，原始值轉為灰色提示；輸入後立即更新圖表；Spinner 箭頭從有效值連續增減
+- **繁體中文介面**：Option Combination 頁面全面中文化，含策略名稱、圖表標籤、損益統計與圖片輸出
 
 ### 技術架構
 
@@ -85,6 +86,7 @@ An interactive P&L visualization tool for options combination strategies. Built 
 - **Image Export**: One-click export as 1400px PNG — includes P&L chart, legend, strategy name, Max Gain / Max Loss / Breakeven, and leg table
 - **Responsive Design (RWD)**: Mobile-optimized layout with icon-only buttons and standalone legend
 - **Ghost-value Input UX**: Strike / Premium fields show previous value as gray hint on focus; chart updates live on each keystroke; spinner increments from the current valid value
+- **Traditional Chinese UI**: Option Combination page fully localized — strategy names, chart labels, P&L stats, and image export all in Traditional Chinese
 
 ### Tech Stack
 
