@@ -192,20 +192,20 @@ const STRATEGY_PRESETS = [
         name: '蝴蝶價差（買權）',
         bounded: true,
         legs: [
-          { dir: 'buy',  type: 'call', strikeOffset: -300 },
-          { dir: 'sell', type: 'call', strikeOffset: +300 },
-          { dir: 'sell', type: 'call', strikeOffset: +300 },
-          { dir: 'buy',  type: 'call', strikeOffset: +900 }
+          { dir: 'buy',  type: 'call', strikeOffset: -600 },
+          { dir: 'sell', type: 'call', strikeOffset:    0 },
+          { dir: 'sell', type: 'call', strikeOffset:    0 },
+          { dir: 'buy',  type: 'call', strikeOffset: +600 }
         ]
       },
       {
         name: '蝴蝶價差（賣權）',
         bounded: true,
         legs: [
-          { dir: 'buy',  type: 'put', strikeOffset: +300 },
-          { dir: 'sell', type: 'put', strikeOffset: -300 },
-          { dir: 'sell', type: 'put', strikeOffset: -300 },
-          { dir: 'buy',  type: 'put', strikeOffset: -900 }
+          { dir: 'buy',  type: 'put', strikeOffset: +600 },
+          { dir: 'sell', type: 'put', strikeOffset:    0 },
+          { dir: 'sell', type: 'put', strikeOffset:    0 },
+          { dir: 'buy',  type: 'put', strikeOffset: -600 }
         ]
       },
       {
