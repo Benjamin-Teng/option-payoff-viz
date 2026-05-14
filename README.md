@@ -24,6 +24,7 @@
 - **說明浮動視窗**：內建英中術語對照表與互動圖操作說明
 - **策略圖片輸出**：一鍵將損益曲線、圖例、策略名稱、Max Gain / Max Loss / Breakeven 與組合明細輸出為 1400px PNG 圖片
 - **RWD 響應式設計**：針對手機螢幕優化版面，按鈕縮為 icon-only，圖例獨立顯示
+- **Ghost-value 輸入體驗**：點擊 Strike / Premium 欄位時，原始值轉為灰色提示；輸入後立即更新圖表；Spinner 箭頭從有效值連續增減
 
 ### 技術架構
 
@@ -60,6 +61,8 @@ open index.html
 2. 手動新增腳位（**+ Add Leg**），或從下方快速策略選單一鍵套用
 3. 調整各腳位的履約價（Strike）與權利金（Premium）
 4. 圖表即時更新損益曲線與損益兩平點
+5. 頁面右上角有 **Option Combination** 與 **Greeks Explorer** 可以選頁
+6. **Option Combination** 用於分析組合損益；**Greeks Explorer** 用於理解選擇權定價模型
 
 ---
 
@@ -81,6 +84,7 @@ An interactive P&L visualization tool for options combination strategies. Built 
 - **Help Panel**: Built-in English–Chinese glossary and chart interaction guide
 - **Image Export**: One-click export as 1400px PNG — includes P&L chart, legend, strategy name, Max Gain / Max Loss / Breakeven, and leg table
 - **Responsive Design (RWD)**: Mobile-optimized layout with icon-only buttons and standalone legend
+- **Ghost-value Input UX**: Strike / Premium fields show previous value as gray hint on focus; chart updates live on each keystroke; spinner increments from the current valid value
 
 ### Tech Stack
 
@@ -117,3 +121,5 @@ No dependencies to install.
 2. Add legs manually with **+ Add Leg**, or apply a preset strategy from the quick selector
 3. Adjust each leg's Strike and Premium
 4. The chart updates in real time with the P&L curve and breakeven points
+5. Use the tabs in the top-right corner to switch between **Option Combination** and **Greeks Explorer**
+6. **Option Combination** is for analyzing strategy P&L; **Greeks Explorer** is for understanding the options pricing model
