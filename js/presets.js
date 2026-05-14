@@ -209,6 +209,26 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
+        name: '兀鷹價差（買權）',
+        bounded: true,
+        legs: [
+          { dir: 'buy',  type: 'call', strikeOffset: -1200 },
+          { dir: 'sell', type: 'call', strikeOffset:  -600 },
+          { dir: 'sell', type: 'call', strikeOffset:  +600 },
+          { dir: 'buy',  type: 'call', strikeOffset: +1200 }
+        ]
+      },
+      {
+        name: '兀鷹價差（賣權）',
+        bounded: true,
+        legs: [
+          { dir: 'buy',  type: 'put', strikeOffset: +1200 },
+          { dir: 'sell', type: 'put', strikeOffset:  +600 },
+          { dir: 'sell', type: 'put', strikeOffset:  -600 },
+          { dir: 'buy',  type: 'put', strikeOffset: -1200 }
+        ]
+      },
+      {
         name: '雙日曆價差 ⏱',
         bounded: true,
         legs: [

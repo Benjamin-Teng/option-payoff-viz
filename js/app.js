@@ -237,7 +237,7 @@ function updateChart() {
       type: 'scatter',
       mode: 'lines',
       name: '損益平衡線',
-      line: { color: '#94a3b8', width: 1, dash: 'dash' },
+      line: { color: '#94a3b8', width: 1.3, dash: 'dash' },
       hoverinfo: 'skip'
     }
   ];
