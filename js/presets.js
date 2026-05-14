@@ -96,7 +96,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: '日曆價差 ⏱',
+        name: '水平價差 ⏱',
         bounded: true,
         legs: [
           { dir: 'sell', type: 'call', strikeOffset: 0, needsExpDate: true, expMonths: 1 },
@@ -104,7 +104,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: '反向日曆價差 ⏱',
+        name: '反向水平價差 ⏱',
         bounded: true,
         legs: [
           { dir: 'buy',  type: 'call', strikeOffset: 0, needsExpDate: true, expMonths: 1 },
@@ -229,7 +229,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: '雙日曆價差 ⏱',
+        name: '雙水平價差 ⏱',
         bounded: true,
         legs: [
           { dir: 'sell', type: 'call', strikeOffset: 0, needsExpDate: true, expMonths: 1 },
@@ -239,7 +239,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: '反向雙日曆價差 ⏱',
+        name: '反向雙水平價差 ⏱',
         bounded: true,
         legs: [
           { dir: 'buy',  type: 'call', strikeOffset: 0, needsExpDate: true, expMonths: 1 },
