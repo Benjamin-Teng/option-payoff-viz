@@ -503,6 +503,7 @@ body {
 
 .leg-number-input:focus { border-color: var(--call); }
 .leg-number-input.error { border-color: var(--error); padding-right: 22px; }
+.leg-number-input::placeholder { color: #94a3b8; text-align: right; }
 
 .error-icon {
   position: absolute;

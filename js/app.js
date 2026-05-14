@@ -67,6 +67,9 @@ const AppState = {
 
 let legIdCounter = 0;
 
+// Ghost-value store: persists across renderLegs re-renders, keyed by "legId:field"
+const ghostPrevValues = {};
+
 // ── Utilities ──
 function genId() { return 'leg_' + (++legIdCounter); }
 
@@ -503,16 +506,33 @@ function bindLegEvents() {
   });
 
   container.querySelectorAll('.leg-number-input').forEach(input => {
+    input.addEventListener('input', () => {
+      if (input.value === '') return;
+      const card = input.closest('.leg-card');
+      const leg = AppState.legs.find(l => l.id === card.dataset.legId);
+      if (!leg) return;
+      const val = parseFloat(input.value);
+      if (isNaN(val)) return;
+      leg[input.dataset.field] = val;
+      updateChart();
+    });
+
     input.addEventListener('change', () => {
       const card = input.closest('.leg-card');
       const leg = AppState.legs.find(l => l.id === card.dataset.legId);
       if (!leg) return;
+      const field = input.dataset.field;
+      const ghostKey = `${leg.id}:${field}`;
+      // Ghost restore: if empty and prev value exists, restore instead of nulling
+      if (input.value === '' && ghostPrevValues[ghostKey] != null) {
+        input.value = ghostPrevValues[ghostKey];
+      }
       const val = input.value === '' ? null : parseFloat(input.value);
-      leg[input.dataset.field] = val;
+      if (val !== null) ghostPrevValues[ghostKey] = String(val);
+      leg[field] = val;
       leg.touched = true;
-      // Sync slider
       if (val !== null) {
-        const slider = card.querySelector(`.leg-slider[data-field="${input.dataset.field}"]`);
+        const slider = card.querySelector(`.leg-slider[data-field="${field}"]`);
         if (slider) slider.value = val;
       }
       renderLegs();
@@ -522,7 +542,25 @@ function bindLegEvents() {
     input.addEventListener('blur', () => {
       const card = input.closest('.leg-card');
       const leg = AppState.legs.find(l => l.id === card.dataset.legId);
-      if (leg) { leg.touched = true; renderLegs(); }
+      if (!leg) return;
+      const field = input.dataset.field;
+      const ghostKey = `${leg.id}:${field}`;
+      let needsUpdate = false;
+      // Ghost restore: change event may not fire if value was '' when focused
+      if (input.value === '' && ghostPrevValues[ghostKey] != null) {
+        const val = parseFloat(ghostPrevValues[ghostKey]);
+        if (!isNaN(val)) {
+          leg[field] = val;
+          const slider = card.querySelector(`.leg-slider[data-field="${field}"]`);
+          if (slider) slider.value = val;
+          needsUpdate = true;
+        }
+      } else if (input.value !== '') {
+        ghostPrevValues[ghostKey] = input.value;
+      }
+      leg.touched = true;
+      renderLegs();
+      if (needsUpdate) updateChart();
     });
   });
 
@@ -1038,6 +1076,62 @@ window.addEventListener('resize', () => {
 });
 
 // ── Init ──
+function initLegInputGhost() {
+  const container = document.getElementById('legs-container');
+
+  container.addEventListener('focusin', e => {
+    const input = e.target;
+    if (!input.classList.contains('leg-number-input')) return;
+    const card = input.closest('.leg-card');
+    if (!card) return;
+    const leg = AppState.legs.find(l => l.id === card.dataset.legId);
+    if (!leg) return;
+    const field = input.dataset.field;
+    const ghostKey = `${leg.id}:${field}`;
+    if (ghostPrevValues[ghostKey] == null && leg[field] !== null) {
+      ghostPrevValues[ghostKey] = String(leg[field]);
+    }
+    const prev = ghostPrevValues[ghostKey];
+    if (prev) {
+      input.placeholder = Number(prev).toFixed(2);
+      input.value = '';
+      input.classList.add('input-ghost');
+    }
+  });
+
+  // Keyboard first printable key: clear placeholder and exit ghost before char inserts
+  container.addEventListener('keydown', e => {
+    const input = e.target;
+    if (!input.classList.contains('leg-number-input')) return;
+    if (!input.classList.contains('input-ghost')) return;
+    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      input.value = '';
+      input.placeholder = '';
+      input.classList.remove('input-ghost');
+    }
+  }, true);
+
+  // Spinner / paste while ghost: value is delta from 0, adjust relative to prevValue.
+  // Runs in capture phase so it fires before the per-input renderLegs handler.
+  container.addEventListener('input', e => {
+    const input = e.target;
+    if (!input.classList.contains('leg-number-input')) return;
+    if (!input.classList.contains('input-ghost')) return;
+    const card = input.closest('.leg-card');
+    if (!card) return;
+    const leg = AppState.legs.find(l => l.id === card.dataset.legId);
+    if (!leg) return;
+    const ghostKey = `${leg.id}:${input.dataset.field}`;
+    const prev = parseFloat(ghostPrevValues[ghostKey]);
+    const delta = parseFloat(input.value);
+    if (!isNaN(prev) && !isNaN(delta)) {
+      input.value = String(prev + delta);
+    }
+    input.placeholder = '';
+    input.classList.remove('input-ghost');
+  }, true);
+}
+
 function initApp() {
   initNavigation();
   initGlobalInput();
@@ -1047,6 +1141,7 @@ function initApp() {
   initExportBtn();
   initPresetTabs();
   initHelpPanel();
+  initLegInputGhost();
   renderLegs();
   updateChart();
 }
