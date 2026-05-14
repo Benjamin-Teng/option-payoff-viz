@@ -1104,7 +1104,8 @@ function initLegInputGhost() {
     const input = e.target;
     if (!input.classList.contains('leg-number-input')) return;
     if (!input.classList.contains('input-ghost')) return;
-    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey
+        && /^[0-9.\-]$/.test(e.key)) {
       input.value = '';
       input.placeholder = '';
       input.classList.remove('input-ghost');
@@ -1112,23 +1113,47 @@ function initLegInputGhost() {
   }, true);
 
   // Spinner / paste while ghost: value is delta from 0, adjust relative to prevValue.
+  // Also restores ghost state when user deletes back to empty.
   // Runs in capture phase so it fires before the per-input renderLegs handler.
   container.addEventListener('input', e => {
     const input = e.target;
     if (!input.classList.contains('leg-number-input')) return;
-    if (!input.classList.contains('input-ghost')) return;
-    const card = input.closest('.leg-card');
-    if (!card) return;
-    const leg = AppState.legs.find(l => l.id === card.dataset.legId);
-    if (!leg) return;
-    const ghostKey = `${leg.id}:${input.dataset.field}`;
-    const prev = parseFloat(ghostPrevValues[ghostKey]);
-    const delta = parseFloat(input.value);
-    if (!isNaN(prev) && !isNaN(delta)) {
-      input.value = String(prev + delta);
+
+    if (input.classList.contains('input-ghost')) {
+      // Spinner / paste while ghost
+      const card = input.closest('.leg-card');
+      if (!card) return;
+      const leg = AppState.legs.find(l => l.id === card.dataset.legId);
+      if (!leg) return;
+      const ghostKey = `${leg.id}:${input.dataset.field}`;
+      const prev = parseFloat(ghostPrevValues[ghostKey]);
+      const delta = parseFloat(input.value);
+      if (!isNaN(prev) && !isNaN(delta)) {
+        input.value = String(prev + delta);
+      }
+      input.placeholder = '';
+      input.classList.remove('input-ghost');
+      return;
     }
-    input.placeholder = '';
-    input.classList.remove('input-ghost');
+
+    // User deleted all typed characters → restore ghost placeholder and update chart
+    if (input.value === '') {
+      const card = input.closest('.leg-card');
+      if (!card) return;
+      const leg = AppState.legs.find(l => l.id === card.dataset.legId);
+      if (!leg) return;
+      const ghostKey = `${leg.id}:${input.dataset.field}`;
+      const prev = ghostPrevValues[ghostKey];
+      if (prev) {
+        const val = parseFloat(prev);
+        if (!isNaN(val)) {
+          leg[input.dataset.field] = val;
+          updateChart();
+        }
+        input.placeholder = Number(prev).toFixed(2);
+        input.classList.add('input-ghost');
+      }
+    }
   }, true);
 }
 
