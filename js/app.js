@@ -198,7 +198,7 @@ function updateChart() {
       Plotly.purge(container);
       AppState.chartInitialized = false;
     }
-    container.innerHTML = '<div class="chart-placeholder">請至少新增一個含 Strike 與 Premium 的腳位，以顯示損益曲線。</div>';
+    container.innerHTML = '<div class="chart-placeholder">請至少新增一個含履約價與權利金的腳位，以顯示損益曲線。</div>';
     renderMobileLegend([]);
     updatePnlStats([], 0);
     return;
