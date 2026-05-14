@@ -305,6 +305,17 @@ function updateChart() {
   const config = { responsive: true, displayModeBar: false, showTips: false };
 
   if (AppState.chartInitialized) {
+    const fl = container._fullLayout;
+    if (fl) {
+      if (fl.xaxis?.autorange === false) {
+        layout.xaxis.range = fl.xaxis.range.slice();
+        layout.xaxis.autorange = false;
+      }
+      if (fl.yaxis?.autorange === false) {
+        layout.yaxis.range = fl.yaxis.range.slice();
+        layout.yaxis.autorange = false;
+      }
+    }
     Plotly.react(container, traces, layout, config);
   } else {
     container.innerHTML = '';
