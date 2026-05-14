@@ -173,14 +173,14 @@ function renderMobileLegend(breakevens) {
     `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};vertical-align:middle"></span>`;
 
   const items = [
-    { icon: line('#2563eb'),    label: 'P&L' },
-    { icon: line('#94a3b8', true), label: 'Break-even' },
+    { icon: line('#2563eb'),    label: '損益' },
+    { icon: line('#94a3b8', true), label: '損益平衡線' },
   ];
   if (breakevens && breakevens.length > 0)
-    items.push({ icon: dot('#16a34a'), label: 'Breakeven' });
+    items.push({ icon: dot('#16a34a'), label: '損益兩平' });
   if (AppState.underlyingPrice) {
-    items.push({ icon: line('#f59e0b', true), label: 'Current Price' });
-    items.push({ icon: dot('#f59e0b'),        label: `P&L @ ${fmtChart(AppState.underlyingPrice)}` });
+    items.push({ icon: line('#f59e0b', true), label: '當前價格' });
+    items.push({ icon: dot('#f59e0b'),        label: `損益 @ ${fmtChart(AppState.underlyingPrice)}` });
   }
 
   el.innerHTML = items.map(i =>
@@ -198,7 +198,7 @@ function updateChart() {
       Plotly.purge(container);
       AppState.chartInitialized = false;
     }
-    container.innerHTML = '<div class="chart-placeholder">Add at least one leg with Strike and Premium to see the P&L curve.</div>';
+    container.innerHTML = '<div class="chart-placeholder">請至少新增一個含 Strike 與 Premium 的腳位，以顯示損益曲線。</div>';
     renderMobileLegend([]);
     updatePnlStats([], 0);
     return;
@@ -226,17 +226,17 @@ function updateChart() {
       y: pnl,
       type: 'scatter',
       mode: 'lines',
-      name: 'P&L',
+      name: '損益',
       line: { color: '#2563eb', width: 2.5 },
       customdata: prices.map((p, i) => [fmtChart(p), fmtChart(pnl[i])]),
-      hovertemplate: 'Spot: %{customdata[0]}<br>P&L: %{customdata[1]}<extra></extra>'
+      hovertemplate: '標的: %{customdata[0]}<br>損益: %{customdata[1]}<extra></extra>'
     },
     {
       x: [prices[0], prices[prices.length - 1]],
       y: [0, 0],
       type: 'scatter',
       mode: 'lines',
-      name: 'Break-even',
+      name: '損益平衡線',
       line: { color: '#94a3b8', width: 1, dash: 'dash' },
       hoverinfo: 'skip'
     }
@@ -249,13 +249,13 @@ function updateChart() {
       y: breakevens.map(() => 0),
       type: 'scatter',
       mode: 'markers+text',
-      name: 'Breakeven',
+      name: '損益兩平',
       marker: { color: '#16a34a', size: 10, symbol: 'circle', line: { color: '#fff', width: 2 } },
       text: breakevens.map(b => fmtChart(b)),
       textposition: 'top center',
       textfont: { color: '#16a34a', size: 11, family: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
       customdata: breakevens.map(b => fmtChart(b)),
-      hovertemplate: 'Breakeven: %{customdata}<extra></extra>'
+      hovertemplate: '損益兩平: %{customdata}<extra></extra>'
     });
   }
 
@@ -266,7 +266,7 @@ function updateChart() {
       y: [minPnL - padY, maxPnL + padY],
       type: 'scatter',
       mode: 'lines',
-      name: 'Current Price',
+      name: '當前價格',
       line: { color: '#f59e0b', width: 1.5, dash: 'dot' },
       hoverinfo: 'skip'
     });
@@ -275,9 +275,9 @@ function updateChart() {
       y: [currentPnL],
       type: 'scatter',
       mode: 'markers',
-      name: `P&L @ ${fmtChart(AppState.underlyingPrice)}`,
+      name: `損益 @ ${fmtChart(AppState.underlyingPrice)}`,
       marker: { color: '#f59e0b', size: 8 },
-      hovertemplate: `Spot: ${fmtChart(AppState.underlyingPrice)}<br>P&L: ${fmtChart(currentPnL)}<extra></extra>`
+      hovertemplate: `標的: ${fmtChart(AppState.underlyingPrice)}<br>損益: ${fmtChart(currentPnL)}<extra></extra>`
     });
   }
 
@@ -285,12 +285,12 @@ function updateChart() {
   const layout = {
     margin: { t: 16, r: 16, b: mobile ? 60 : 72, l: 60 },
     xaxis: {
-      title: { text: mobile ? 'Price at Expiry' : 'Underlying Price at Expiration', font: { size: mobile ? 11 : 12 } },
+      title: { text: mobile ? '到期價格' : '到期標的價格', font: { size: mobile ? 11 : 12 } },
       gridcolor: '#e2e8f0',
       zeroline: false
     },
     yaxis: {
-      title: { text: 'P / L', font: { size: mobile ? 11 : 12 } },
+      title: { text: '損益', font: { size: mobile ? 11 : 12 } },
       gridcolor: '#e2e8f0',
       zeroline: true,
       zerolinecolor: '#94a3b8',
@@ -337,22 +337,22 @@ function applyPnlStats(gainEl, lossEl, gainLabelEl, lossLabelEl, hi, lo, netCall
 
   // hi side: Max Gain (≥0) or Min Loss (<0, always losing)
   if (hi < 0) {
-    gainLabelEl.textContent = 'Min Loss';
+    gainLabelEl.textContent = '最小虧損';
     gainEl.textContent  = fmtChart(hi);
     gainEl.className    = 'pnl-stat-value pnl-loss';
   } else {
-    gainLabelEl.textContent = 'Max Gain';
+    gainLabelEl.textContent = '最大獲利';
     gainEl.textContent  = netCallDir > 0 ? '+∞' : fmt(hi);
     gainEl.className    = 'pnl-stat-value pnl-gain';
   }
 
   // lo side: Min Gain (>0, always gaining) or Max Loss (≤0)
   if (lo > 0) {
-    lossLabelEl.textContent = 'Min Gain';
+    lossLabelEl.textContent = '最小獲利';
     lossEl.textContent  = fmt(lo);
     lossEl.className    = 'pnl-stat-value pnl-gain';
   } else {
-    lossLabelEl.textContent = 'Max Loss';
+    lossLabelEl.textContent = '最大虧損';
     lossEl.textContent  = netCallDir < 0 ? '-∞' : fmtChart(lo);
     lossEl.className    = 'pnl-stat-value pnl-loss';
   }
@@ -365,12 +365,12 @@ function updatePnlStats(legs, S) {
   const lossLabelEl = document.getElementById('stat-max-loss-label');
   if (!gainEl || !lossEl) return;
 
-  const reset = el => { el.textContent = 'None'; el.className = 'pnl-stat-value pnl-none'; };
+  const reset = el => { el.textContent = '無'; el.className = 'pnl-stat-value pnl-none'; };
 
   if (!legs.length || !S) {
     reset(gainEl); reset(lossEl);
-    if (gainLabelEl) gainLabelEl.textContent = 'Max Gain';
-    if (lossLabelEl) lossLabelEl.textContent = 'Max Loss';
+    if (gainLabelEl) gainLabelEl.textContent = '最大獲利';
+    if (lossLabelEl) lossLabelEl.textContent = '最大虧損';
     return;
   }
 
@@ -421,7 +421,7 @@ function renderLegCard(leg, index) {
       </div>
 
       <div class="slider-row">
-        <span class="slider-label">Strike</span>
+        <span class="slider-label">履約價</span>
         <input type="range" class="leg-slider" data-field="strike"
                min="${sr.min}" max="${sr.max}" step="${sr.step}" value="${strikeSlider}">
         <div class="number-input-wrap">
@@ -433,7 +433,7 @@ function renderLegCard(leg, index) {
       </div>
 
       <div class="slider-row">
-        <span class="slider-label">Premium</span>
+        <span class="slider-label">權利金</span>
         <input type="range" class="leg-slider" data-field="premium"
                min="0" max="${pmMax}" step="${pmStep}" value="${premiumSlider}">
         <div class="number-input-wrap">
@@ -456,7 +456,7 @@ function renderLegs() {
 
   container.innerHTML = AppState.legs.length > 0
     ? AppState.legs.map((leg, i) => renderLegCard(leg, i)).join('')
-    : '<div style="font-size:13px;color:#94a3b8;padding:8px 0;">No legs added yet. Click <strong>+ Add Leg</strong> or choose a strategy below.</div>';
+    : '<div style="font-size:13px;color:#94a3b8;padding:8px 0;">尚未新增腳位，請點擊 <strong>+ Add Leg</strong> 或從下方選擇策略。</div>';
   count.textContent = `(${AppState.legs.length}/${MAX_LEGS})`;
   addBtn.disabled = AppState.legs.length >= MAX_LEGS;
   clearBtn.disabled = AppState.legs.length === 0;
@@ -840,9 +840,9 @@ async function exportStrategyImage() {
     if (expLo > expHi) { const tmp = expLo; expLo = expHi; expHi = tmp; }
     const netCallDir = legs.reduce((s, l) => l.type === 'call' ? s + (l.direction === 'buy' ? 1 : -1) : s, 0);
     const fmt = v => (v >= 0 ? '+' : '') + fmtChart(v);
-    const maxGainLabel = expHi < 0 ? 'Min Loss' : 'Max Gain';
+    const maxGainLabel = expHi < 0 ? '最小虧損' : '最大獲利';
     const maxGainStr   = expHi < 0 ? fmtChart(expHi) : (netCallDir > 0 ? '+∞' : fmt(expHi));
-    const maxLossLabel = expLo > 0 ? 'Min Gain' : 'Max Loss';
+    const maxLossLabel = expLo > 0 ? '最小獲利' : '最大虧損';
     const maxLossStr   = expLo > 0 ? fmt(expLo) : (netCallDir < 0 ? '-∞' : fmtChart(expLo));
     const breakevenStr = exportBreakevens.length > 0
       ? exportBreakevens.map(b => fmtChart(b)).join(' / ')
@@ -884,7 +884,7 @@ async function exportStrategyImage() {
 
     ctx.font = `bold ${FS.sm}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
     ctx.fillStyle = C.muted;
-    ctx.fillText('Legend', lx, ly);
+    ctx.fillText('圖例', lx, ly);
     ly += Math.round(itemGap * 0.7);
 
     const drawLegendItem = (icon, label, sublabel) => {
@@ -908,14 +908,14 @@ async function exportStrategyImage() {
     drawLegendItem(() => {
       ctx.strokeStyle = C.pnl; ctx.lineWidth = 2.5; ctx.setLineDash([]);
       ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + lineLen, ly); ctx.stroke();
-    }, 'P&L');
+    }, '損益');
 
     // Zero line
     drawLegendItem(() => {
       ctx.strokeStyle = C.zero; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
       ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + lineLen, ly); ctx.stroke();
       ctx.setLineDash([]);
-    }, 'Break-even');
+    }, '損益平衡線');
 
     // Breakeven points
     const beText = exportBreakevens.length > 0
@@ -927,24 +927,24 @@ async function exportStrategyImage() {
       ctx.beginPath(); ctx.arc(cx, ly, r, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.arc(cx, ly, r, 0, Math.PI * 2); ctx.stroke();
-    }, 'Breakeven', beText);
+    }, '損益兩平', beText);
 
     // Current price
     drawLegendItem(() => {
       ctx.strokeStyle = C.price; ctx.lineWidth = 1.5; ctx.setLineDash([2, 2]);
       ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + lineLen, ly); ctx.stroke();
       ctx.setLineDash([]);
-    }, 'Current Price', '@' + fmtChart(S));
+    }, '當前價格', '@' + fmtChart(S));
 
     // Strategy name
-    const strategyName = AppState.activeStrategyName || 'Customized Strategy';
+    const strategyName = AppState.activeStrategyName || '自訂策略';
     ly += Math.round(itemGap * 0.3);
     ctx.strokeStyle = C.border; ctx.lineWidth = 1; ctx.setLineDash([]);
     ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(LEGEND_W - lx, ly); ctx.stroke();
     ly += Math.round(itemGap * 0.5);
     ctx.font = `bold ${FS.sm}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
     ctx.fillStyle = C.muted;
-    ctx.fillText('Strategy', lx, ly);
+    ctx.fillText('策略', lx, ly);
     ly += Math.round(itemGap * 0.6);
     ctx.font = `${FS.xs}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
     ctx.fillStyle = C.text;
@@ -958,12 +958,12 @@ async function exportStrategyImage() {
     const infoY = CHART_H + Math.round(INFO_H * 0.55);
     ctx.font = `bold ${FS.md}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
     ctx.fillStyle = C.text;
-    ctx.fillText(`Underlying Price: ${fmtChart(S)}`, PAD, infoY);
+    ctx.fillText(`標的現貨價格: ${fmtChart(S)}`, PAD, infoY);
     if (hasExpiry) {
       const expiries = [...new Set(legs.filter(l => l.expDate).map(l => l.expDate))];
       ctx.font = `${FS.sm}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
       ctx.fillStyle = C.muted;
-      ctx.fillText(`Expiry: ${expiries.join(', ')}`, PAD, infoY + Math.round(INFO_H * 0.4));
+      ctx.fillText(`到期日: ${expiries.join(', ')}`, PAD, infoY + Math.round(INFO_H * 0.4));
     }
 
     // Right-side stats: Max Gain | Max Loss | Breakeven
@@ -974,7 +974,7 @@ async function exportStrategyImage() {
     [
       { label: maxGainLabel, value: maxGainStr, color: expHi < 0 ? C.sell : C.buy },
       { label: maxLossLabel, value: maxLossStr, color: expLo > 0 ? C.buy : C.sell },
-      { label: 'Breakeven', value: breakevenStr, color: C.text },
+      { label: '損益兩平', value: breakevenStr, color: C.text },
     ].forEach(({ label, value, color }, i) => {
       const x = statsStartX + i * statsColW;
       ctx.font = `${FS.xs}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
@@ -988,7 +988,7 @@ async function exportStrategyImage() {
     // ── Table ──
     const tableTop = CHART_H + INFO_H;
     const colW = Math.round((W - PAD * 2) / COL_COUNT);
-    const cols = ['Direction', 'Type', 'Strike', 'Premium', ...(hasExpiry ? ['Expiry'] : [])];
+    const cols = ['方向', '類型', '履約價', '權利金', ...(hasExpiry ? ['到期日'] : [])];
 
     // Header
     ctx.fillStyle = C.nav;
@@ -1029,9 +1029,8 @@ async function exportStrategyImage() {
 
     // Download — use preset name if available, else fallback
     const rawName = AppState.activeStrategyName;
-    const filename = rawName
-      ? rawName.toLowerCase().replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-') + '.png'
-      : 'customized-option-strategy.png';
+    const slug = rawName ? rawName.toLowerCase().replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-') : '';
+    const filename = slug ? slug + '.png' : 'option-strategy.png';
     const link = document.createElement('a');
     link.download = filename;
     link.href = canvas.toDataURL('image/png');

@@ -8,7 +8,7 @@ const STRATEGY_PRESETS = [
     category: '2-Leg',
     strategies: [
       {
-        name: 'Bull Call Spread',
+        name: '多頭買權價差',
         bounded: true,
         legs: [
           { dir: 'buy',  type: 'call', strikeOffset:    0 },
@@ -16,7 +16,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Bear Call Spread',
+        name: '空頭買權價差',
         bounded: true,
         legs: [
           { dir: 'sell', type: 'call', strikeOffset:    0 },
@@ -24,7 +24,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Bull Put Spread',
+        name: '多頭賣權價差',
         bounded: true,
         legs: [
           { dir: 'sell', type: 'put', strikeOffset:    0 },
@@ -32,7 +32,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Bear Put Spread',
+        name: '空頭賣權價差',
         bounded: true,
         legs: [
           { dir: 'buy',  type: 'put', strikeOffset:    0 },
@@ -40,7 +40,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Long Straddle',
+        name: '買進跨式',
         bounded: false,
         legs: [
           { dir: 'buy', type: 'call', premiumFactor: 4 },
@@ -48,7 +48,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Short Straddle',
+        name: '賣出跨式',
         bounded: false,
         legs: [
           { dir: 'sell', type: 'call', premiumFactor: 4 },
@@ -56,7 +56,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Long Strangle',
+        name: '買進勒式',
         bounded: false,
         legs: [
           { dir: 'buy', type: 'call', premiumFactor: 4, strikePercent: +2 },
@@ -64,7 +64,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Short Strangle',
+        name: '賣出勒式',
         bounded: false,
         legs: [
           { dir: 'sell', type: 'call', premiumFactor: 4, strikePercent: +2 },
@@ -72,7 +72,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Risk Reversal',
+        name: '風險逆轉',
         bounded: false,
         legs: [
           { dir: 'buy',  type: 'call', premiumFactor: 4, strikePercent: +2 },
@@ -80,7 +80,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Synthetic Long',
+        name: '合成多頭',
         bounded: false,
         legs: [
           { dir: 'buy',  type: 'call', premiumFactor: 4 },
@@ -88,7 +88,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Synthetic Short',
+        name: '合成空頭',
         bounded: false,
         legs: [
           { dir: 'sell', type: 'call', premiumFactor: 4 },
@@ -96,7 +96,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Calendar Spread ⏱',
+        name: '日曆價差 ⏱',
         bounded: true,
         legs: [
           { dir: 'sell', type: 'call', strikeOffset: 0, needsExpDate: true, expMonths: 1 },
@@ -104,7 +104,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Short Calendar Spread ⏱',
+        name: '反向日曆價差 ⏱',
         bounded: true,
         legs: [
           { dir: 'buy',  type: 'call', strikeOffset: 0, needsExpDate: true, expMonths: 1 },
@@ -117,7 +117,7 @@ const STRATEGY_PRESETS = [
     category: '3-Leg',
     strategies: [
       {
-        name: 'Ratio Call Spread',
+        name: '比例買權價差',
         bounded: false,
         legs: [
           { dir: 'buy',  type: 'call', premiumFactor: 4, strikePercent:  0 },
@@ -126,7 +126,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Ratio Put Spread',
+        name: '比例賣權價差',
         bounded: false,
         legs: [
           { dir: 'buy',  type: 'put', premiumFactor: 4, strikePercent:  0 },
@@ -135,7 +135,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Jade Lizard',
+        name: '玉蜥蜴(Jade Lizard)',
         bounded: false,
         legs: [
           { dir: 'sell', type: 'put',  premiumFactor: 4, strikePercent: -2 },
@@ -149,7 +149,7 @@ const STRATEGY_PRESETS = [
     category: '4-Leg',
     strategies: [
       {
-        name: 'Iron Condor',
+        name: '鐵兀鷹',
         bounded: true,
         legs: [
           { dir: 'buy',  type: 'put',  strikeOffset: -1200 },
@@ -159,7 +159,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Short Iron Condor',
+        name: '反向鐵兀鷹',
         bounded: true,
         legs: [
           { dir: 'sell', type: 'put',  strikeOffset: -1200 },
@@ -169,7 +169,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Iron Butterfly',
+        name: '鐵蝴蝶',
         bounded: true,
         legs: [
           { dir: 'buy',  type: 'put',  strikeOffset: -600 },
@@ -179,7 +179,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Short Iron Butterfly',
+        name: '反向鐵蝴蝶',
         bounded: true,
         legs: [
           { dir: 'sell', type: 'put',  strikeOffset: -600 },
@@ -189,7 +189,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Butterfly (Call)',
+        name: '蝴蝶價差（買權）',
         bounded: true,
         legs: [
           { dir: 'buy',  type: 'call', strikeOffset: -300 },
@@ -199,7 +199,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Butterfly (Put)',
+        name: '蝴蝶價差（賣權）',
         bounded: true,
         legs: [
           { dir: 'buy',  type: 'put', strikeOffset: +300 },
@@ -209,7 +209,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Double Calendar ⏱',
+        name: '雙日曆價差 ⏱',
         bounded: true,
         legs: [
           { dir: 'sell', type: 'call', strikeOffset: 0, needsExpDate: true, expMonths: 1 },
@@ -219,7 +219,7 @@ const STRATEGY_PRESETS = [
         ]
       },
       {
-        name: 'Short Double Calendar Spread ⏱',
+        name: '反向雙日曆價差 ⏱',
         bounded: true,
         legs: [
           { dir: 'buy',  type: 'call', strikeOffset: 0, needsExpDate: true, expMonths: 1 },
