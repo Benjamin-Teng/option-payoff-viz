@@ -93,7 +93,7 @@ function getStrikeRange() {
   if (S && S > 0) {
     const min  = Math.max(1, parseFloat((S * 0.05).toFixed(2)));
     const max  = parseFloat((S * 3.0).toFixed(2));
-    const step = Math.max(0.01, parseFloat((S * 0.0001).toFixed(2)));
+    const step = Math.max(0.01, parseFloat((S * 0.001).toFixed(2)));
     return { min, max, step };
   }
   return { min: 1000, max: 80000, step: 10 };
@@ -266,6 +266,20 @@ function updateChart() {
 
   // Color the P&L line: green above zero, red below
   const traces = [
+    {
+      x: prices,
+      y: pnl.map(v => v !== null ? Math.max(0, v) : null),
+      type: 'scatter', mode: 'none',
+      fill: 'tozeroy', fillcolor: 'rgba(34,197,94,0.05)',
+      line: { width: 0 }, hoverinfo: 'skip', showlegend: false
+    },
+    {
+      x: prices,
+      y: pnl.map(v => v !== null ? Math.min(0, v) : null),
+      type: 'scatter', mode: 'none',
+      fill: 'tozeroy', fillcolor: 'rgba(239,68,68,0.05)',
+      line: { width: 0 }, hoverinfo: 'skip', showlegend: false
+    },
     {
       x: prices,
       y: pnl,
