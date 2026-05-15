@@ -137,6 +137,7 @@ body {
 #payoff-chart {
   width: 100%;
   flex: 1;
+  touch-action: pan-y;
 }
 
 .chart-legend-mobile {
@@ -206,6 +207,24 @@ body {
   }
 }
 
+@media (min-width: 640px) {
+  #page-combination {
+    flex-direction: row;
+  }
+  .chart-section {
+    flex: 0 0 60%;
+    min-height: unset;
+    border-bottom: none;
+    border-right: 1px solid var(--border);
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1200px) {
+  .btn-label {
+    display: none;
+  }
+}
+
 .input-section {
   flex: 1;
   overflow-y: auto;
@@ -228,7 +247,8 @@ body {
 .global-input-card {
   display: flex;
   align-items: center;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 8px 16px;
 }
 
 .field-label-row {
@@ -254,8 +274,12 @@ body {
   color: var(--text-muted);
 }
 
+.taifex-bar {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .taifex-link {
-  margin-left: auto;
   font-size: 11px;
   font-weight: 500;
   color: var(--nav-bg);

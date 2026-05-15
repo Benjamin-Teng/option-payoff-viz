@@ -66,6 +66,8 @@ const AppState = {
 };
 
 let legIdCounter = 0;
+let userHasZoomed = false;
+let _clamping = false;
 
 // Ghost-value store: persists across renderLegs re-renders, keyed by "legId:field"
 const ghostPrevValues = {};
@@ -86,10 +88,12 @@ function fmtChart(v) {
 function getStrikeRange() {
   const S = AppState.underlyingPrice;
   if (S && S > 0) {
-    const step = Math.max(0.01, parseFloat((S * 0.0002).toFixed(2)));
-    return { min: parseFloat((S * 0.6).toFixed(2)), max: parseFloat((S * 1.4).toFixed(2)), step };
+    const min  = Math.max(1, parseFloat((S * 0.05).toFixed(2)));
+    const max  = parseFloat((S * 3.0).toFixed(2));
+    const step = Math.max(0.01, parseFloat((S * 0.0001).toFixed(2)));
+    return { min, max, step };
   }
-  return { min: 10000, max: 40000, step: 50 };
+  return { min: 1000, max: 80000, step: 10 };
 }
 
 function getPremiumMax() {
@@ -197,6 +201,7 @@ function updateChart() {
     if (AppState.chartInitialized) {
       Plotly.purge(container);
       AppState.chartInitialized = false;
+      userHasZoomed = false;
     }
     container.innerHTML = '<div class="chart-placeholder">請至少新增一個含履約價與權利金的腳位，以顯示損益曲線。</div>';
     renderMobileLegend([]);
@@ -205,19 +210,51 @@ function updateChart() {
   }
 
   const S0 = AppState.underlyingPrice || (validLegs[0].strike || 22000);
-  const range = S0 * 0.3;
+
+  // Extended data range: 5% to 300% of S0 for deep OTM/ITM panning
+  const dataMin = Math.max(1, S0 * 0.05);
+  const dataMax = S0 * 3;
   const prices = [];
   const pnl = [];
-
   for (let i = 0; i <= CHART_POINTS; i++) {
-    const S = (S0 - range) + (2 * range * i / CHART_POINTS);
+    const S = dataMin + (dataMax - dataMin) * i / CHART_POINTS;
     prices.push(S);
     pnl.push(calcCombinedPnL(validLegs, S));
   }
 
-  const minPnL = Math.min(...pnl);
-  const maxPnL = Math.max(...pnl);
-  const padY = (maxPnL - minPnL) * 0.1 || 50;
+  // Adaptive initial view: centre on strikes, buffer based on strike structure
+  const strikes = validLegs.map(l => l.strike);
+  const minStrike = Math.min(...strikes);
+  const maxStrike = Math.max(...strikes);
+  const focusCenter = (minStrike + maxStrike) / 2;
+  // structureSpan: the width of the strike layout (min 2% of S0 for ATM strategies)
+  const structureSpan = Math.max(maxStrike - minStrike, S0 * 0.02);
+  // buffer: 1.2× structure on each side, at least 5% of S0, capped at 20% of S0
+  const viewBuffer = Math.min(
+    Math.max(structureSpan * 1.2, S0 * 0.05),
+    S0 * 0.20
+  );
+  let adaptiveXMin = Math.max(dataMin, focusCenter - viewBuffer);
+  let adaptiveXMax = Math.min(dataMax, focusCenter + viewBuffer);
+
+  // Expand view to include breakevens if they fall outside the structure-based view
+  // (e.g. calendar/horizontal spreads where all strikes are at S0)
+  const breakevens = findBreakevens(prices, pnl);
+  if (breakevens.length > 0) {
+    const beMin = Math.min(...breakevens);
+    const beMax = Math.max(...breakevens);
+    const beMargin = Math.max((beMax - beMin) * 0.2, S0 * 0.03);
+    adaptiveXMin = Math.max(dataMin, Math.min(adaptiveXMin, beMin - beMargin));
+    adaptiveXMax = Math.min(dataMax, Math.max(adaptiveXMax, beMax + beMargin));
+  }
+
+  // Y range computed over the final adaptive visible X region only
+  const visPnl = prices
+    .map((p, i) => (p >= adaptiveXMin && p <= adaptiveXMax ? pnl[i] : null))
+    .filter(v => v !== null);
+  const minVisiblePnL = visPnl.length ? Math.min(...visPnl) : Math.min(...pnl);
+  const maxVisiblePnL = visPnl.length ? Math.max(...visPnl) : Math.max(...pnl);
+  const padY = (maxVisiblePnL - minVisiblePnL) * 0.12 || 50;
 
   // Color the P&L line: green above zero, red below
   const traces = [
@@ -242,7 +279,6 @@ function updateChart() {
     }
   ];
 
-  const breakevens = findBreakevens(prices, pnl);
   if (breakevens.length > 0) {
     traces.push({
       x: breakevens,
@@ -263,7 +299,7 @@ function updateChart() {
     const currentPnL = calcCombinedPnL(validLegs, AppState.underlyingPrice);
     traces.push({
       x: [AppState.underlyingPrice, AppState.underlyingPrice],
-      y: [minPnL - padY, maxPnL + padY],
+      y: [-1e9, 1e9],
       type: 'scatter',
       mode: 'lines',
       name: '當前價格',
@@ -287,33 +323,44 @@ function updateChart() {
     xaxis: {
       title: { text: mobile ? '到期價格' : '到期標的價格', font: { size: mobile ? 11 : 12 } },
       gridcolor: '#e2e8f0',
-      zeroline: false
+      zeroline: false,
+      range: [adaptiveXMin, adaptiveXMax],
+      autorange: false
     },
     yaxis: {
       title: { text: '損益', font: { size: mobile ? 11 : 12 } },
       gridcolor: '#e2e8f0',
       zeroline: true,
       zerolinecolor: '#94a3b8',
-      zerolinewidth: 1
+      zerolinewidth: 1,
+      range: [minVisiblePnL - padY, maxVisiblePnL + padY],
+      autorange: false
     },
     paper_bgcolor: '#ffffff',
     plot_bgcolor: '#f8fafc',
     showlegend: false,
+    dragmode: 'pan',
     font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', size: 12 }
   };
 
-  const config = { responsive: true, displayModeBar: false, showTips: false };
+  const config = {
+    responsive: true,
+    displayModeBar: false,
+    showTips: false,
+    scrollZoom: true,
+    doubleClick: 'reset'
+  };
+
+  container._dataRange = [dataMin, dataMax];
 
   if (AppState.chartInitialized) {
-    const fl = container._fullLayout;
-    if (fl) {
-      if (fl.xaxis?.autorange === false) {
+    if (userHasZoomed) {
+      const fl = container._fullLayout;
+      if (fl?.xaxis?.autorange === false) {
         layout.xaxis.range = fl.xaxis.range.slice();
-        layout.xaxis.autorange = false;
       }
-      if (fl.yaxis?.autorange === false) {
+      if (fl?.yaxis?.autorange === false) {
         layout.yaxis.range = fl.yaxis.range.slice();
-        layout.yaxis.autorange = false;
       }
     }
     Plotly.react(container, traces, layout, config);
@@ -321,6 +368,29 @@ function updateChart() {
     container.innerHTML = '';
     Plotly.newPlot(container, traces, layout, config);
     AppState.chartInitialized = true;
+    container.on('plotly_relayout', eventData => {
+      if (_clamping) return;
+
+      if ('xaxis.range[0]' in eventData || 'yaxis.range[0]' in eventData) {
+        userHasZoomed = true;
+      } else if (eventData['xaxis.autorange'] === true) {
+        userHasZoomed = false;
+      }
+
+      if ('xaxis.range[0]' in eventData || 'xaxis.range[1]' in eventData) {
+        const [dMin, dMax] = container._dataRange || [-Infinity, Infinity];
+        const fl = container._fullLayout;
+        if (!fl?.xaxis?.range) return;
+        const x0 = fl.xaxis.range[0];
+        const x1 = fl.xaxis.range[1];
+        if (x0 < dMin || x1 > dMax) {
+          _clamping = true;
+          Plotly.relayout(container, {
+            'xaxis.range': [Math.max(dMin, x0), Math.min(dMax, x1)]
+          }).finally(() => { _clamping = false; });
+        }
+      }
+    });
   }
 
   renderMobileLegend(breakevens);
@@ -792,9 +862,9 @@ function initClearLegsBtn() {
 // ── Chart Reset Button ──
 function initChartResetBtn() {
   document.getElementById('chart-reset-btn').addEventListener('click', () => {
-    const container = document.getElementById('payoff-chart');
     if (AppState.chartInitialized) {
-      Plotly.relayout(container, { 'xaxis.autorange': true, 'yaxis.autorange': true });
+      userHasZoomed = false;
+      updateChart();
     }
   });
 }

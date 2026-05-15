@@ -138,9 +138,9 @@ const STRATEGY_PRESETS = [
         name: '玉蜥蜴(Jade Lizard)',
         bounded: false,
         legs: [
-          { dir: 'sell', type: 'put',  premiumFactor: 4, strikePercent: -2 },
-          { dir: 'sell', type: 'call', premiumFactor: 4, strikePercent: +2 },
-          { dir: 'buy',  type: 'call', premiumFactor: 4, strikePercent: +6 }
+          { dir: 'sell', type: 'put',  premiumFactor: 4,   strikePercent: -2 },
+          { dir: 'sell', type: 'call', premiumFactor: 4,   strikePercent: +2 },
+          { dir: 'buy',  type: 'call', premiumFactor: 2.5, strikePercent: +6 }
         ]
       }
     ]
