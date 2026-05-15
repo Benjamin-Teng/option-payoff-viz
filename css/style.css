@@ -154,7 +154,9 @@ body {
 }
 
 body.chart-is-dragging,
-body.chart-is-dragging * {
+body.chart-is-dragging *,
+body.chart-is-dragging #payoff-chart .nsewdrag,
+body.chart-is-dragging #payoff-chart .drag {
   cursor: grabbing !important;
 }
 
@@ -1056,6 +1058,25 @@ body.chart-is-dragging * {
     transform: none;
   }
 }
+
+/* ── Mobile P&L Tap Tooltip ── */
+.mobile-pnl-tip {
+  position: fixed;
+  background: rgba(18, 28, 48, 0.92);
+  color: #f1f5f9;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  pointer-events: none;
+  z-index: 500;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: opacity 0.15s;
+}
+.mobile-pnl-tip.hidden { display: none; }
 
 /* ── Empty Chart Placeholder ── */
 .chart-placeholder {

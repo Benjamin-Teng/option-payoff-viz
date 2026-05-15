@@ -88,6 +88,17 @@ function fmtChart(v) {
   return v.toFixed(2);                // 1–2 digits: 2 decimals
 }
 
+// Format a price or P&L value using precision driven by the underlying price magnitude
+// S 5-digit(10000+): 0dp | S 4-digit(1000-9999): 1dp | S 3-digit or less: 2dp
+function _fmtByUnderlying(v) {
+  if (v === null || isNaN(v)) return '—';
+  const S = AppState.underlyingPrice;
+  const dp = (!S || S >= 10000) ? 0 : (S >= 1000) ? 1 : 2;
+  return v.toFixed(dp);
+}
+function fmtPnl(v)   { return _fmtByUnderlying(v); }
+function fmtPrice(v) { return _fmtByUnderlying(v); }
+
 function getStrikeRange() {
   const S = AppState.underlyingPrice;
   if (S && S > 0) {
@@ -187,7 +198,7 @@ function renderMobileLegend(breakevens) {
     items.push({ icon: dot('#16a34a'), label: '損益兩平' });
   if (AppState.underlyingPrice) {
     items.push({ icon: line('#f59e0b', true), label: '當前價格' });
-    items.push({ icon: dot('#f59e0b'),        label: `損益 @ ${fmtChart(AppState.underlyingPrice)}` });
+    items.push({ icon: dot('#f59e0b'),        label: `損益 @ ${fmtPrice(AppState.underlyingPrice)}` });
   }
 
   el.innerHTML = items.map(i =>
@@ -287,7 +298,7 @@ function updateChart() {
       mode: 'lines',
       name: '損益',
       line: { color: '#2563eb', width: 2.5 },
-      customdata: prices.map((p, i) => [fmtChart(p), fmtChart(pnl[i])]),
+      customdata: prices.map((p, i) => [fmtPrice(p), fmtPnl(pnl[i])]),
       hovertemplate: '標的: %{customdata[0]}<br>損益: %{customdata[1]}<extra></extra>'
     },
     {
@@ -309,13 +320,23 @@ function updateChart() {
       mode: 'markers+text',
       name: '損益兩平',
       marker: { color: '#16a34a', size: 10, symbol: 'circle', line: { color: '#fff', width: 2 } },
-      text: breakevens.map(b => fmtChart(b)),
+      text: breakevens.map(b => fmtPrice(b)),
       textposition: 'top center',
       textfont: { color: '#16a34a', size: 11, family: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
-      customdata: breakevens.map(b => fmtChart(b)),
+      customdata: breakevens.map(b => fmtPrice(b)),
       hovertemplate: '損益兩平: %{customdata}<extra></extra>'
     });
   }
+
+  // Cursor dot trace — updated by showCursorAt(), hidden initially
+  traces.push({
+    x: [null], y: [null],
+    type: 'scatter', mode: 'markers',
+    hoverinfo: 'skip', showlegend: false,
+    marker: { color: '#7c3aed', size: 9, symbol: 'circle', line: { color: '#fff', width: 2 } },
+    visible: false
+  });
+  const cursorDotIdx = traces.length - 1;
 
   if (AppState.underlyingPrice) {
     const currentPnL = calcCombinedPnL(validLegs, AppState.underlyingPrice);
@@ -333,9 +354,9 @@ function updateChart() {
       y: [currentPnL],
       type: 'scatter',
       mode: 'markers',
-      name: `損益 @ ${fmtChart(AppState.underlyingPrice)}`,
+      name: `損益 @ ${fmtPrice(AppState.underlyingPrice)}`,
       marker: { color: '#f59e0b', size: 8 },
-      hovertemplate: `標的: ${fmtChart(AppState.underlyingPrice)}<br>損益: ${fmtChart(currentPnL)}<extra></extra>`
+      hovertemplate: `標的: ${fmtPrice(AppState.underlyingPrice)}<br>損益: ${fmtPnl(currentPnL)}<extra></extra>`
     });
   }
 
@@ -362,7 +383,13 @@ function updateChart() {
     plot_bgcolor: '#f8fafc',
     showlegend: false,
     dragmode: 'pan',
-    font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', size: 12 }
+    font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', size: 12 },
+    shapes: [{
+      type: 'line', x0: 0, x1: 0, y0: 0, y1: 1,
+      xref: 'x', yref: 'paper',
+      line: { color: 'rgba(109,40,217,0.55)', width: 1.5, dash: 'dot' },
+      visible: false
+    }]
   };
 
   const config = {
@@ -374,6 +401,9 @@ function updateChart() {
   };
 
   container._dataRange = [dataMin, dataMax];
+  container._pnlData = { prices, pnl };
+  container._cursorTraceIdx = cursorDotIdx;
+  container._pnlLineTraceIdx = 2; // always index 2 (after two fill traces)
 
   if (AppState.chartInitialized) {
     if (userHasZoomed) {
@@ -390,6 +420,14 @@ function updateChart() {
     container.innerHTML = '';
     Plotly.newPlot(container, traces, layout, config);
     AppState.chartInitialized = true;
+    container.on('plotly_hover', eventData => {
+      const pt = eventData?.points?.find(
+        p => p.curveNumber === container._pnlLineTraceIdx
+      );
+      if (pt) showCursorAt(container, pt.x, pt.y);
+    });
+    container.on('plotly_unhover', () => hideCursor(container));
+
     container.on('plotly_relayout', eventData => {
       if (_clamping) return;
 
@@ -436,12 +474,12 @@ function calcPnlBounds(legs, S) {
 }
 
 function applyPnlStats(gainEl, lossEl, gainLabelEl, lossLabelEl, hi, lo, netCallDir) {
-  const fmt = v => (v >= 0 ? '+' : '') + fmtChart(v);
+  const fmt = v => (v >= 0 ? '+' : '') + fmtPnl(v);
 
   // hi side: Max Gain (≥0) or Min Loss (<0, always losing)
   if (hi < 0) {
     gainLabelEl.textContent = '最小虧損';
-    gainEl.textContent  = fmtChart(hi);
+    gainEl.textContent  = fmtPnl(hi);
     gainEl.className    = 'pnl-stat-value pnl-loss';
   } else {
     gainLabelEl.textContent = '最大獲利';
@@ -456,7 +494,7 @@ function applyPnlStats(gainEl, lossEl, gainLabelEl, lossLabelEl, hi, lo, netCall
     lossEl.className    = 'pnl-stat-value pnl-gain';
   } else {
     lossLabelEl.textContent = '最大虧損';
-    lossEl.textContent  = netCallDir < 0 ? '-∞' : fmtChart(lo);
+    lossEl.textContent  = netCallDir < 0 ? '-∞' : fmtPnl(lo);
     lossEl.className    = 'pnl-stat-value pnl-loss';
   }
 }
@@ -882,6 +920,46 @@ function initClearLegsBtn() {
 }
 
 // ── Chart Reset Button ──
+function showCursorAt(container, dataX, pnlVal) {
+  const idx = container._cursorTraceIdx;
+  if (idx == null || !AppState.chartInitialized) return;
+  Plotly.update(container,
+    { x: [[dataX]], y: [[pnlVal]], visible: true },
+    { 'shapes[0].x0': dataX, 'shapes[0].x1': dataX, 'shapes[0].visible': true },
+    [idx]
+  );
+}
+
+function hideCursor(container) {
+  const idx = container._cursorTraceIdx;
+  if (idx == null || !AppState.chartInitialized) return;
+  Plotly.update(container,
+    { visible: false },
+    { 'shapes[0].visible': false },
+    [idx]
+  );
+}
+
+function showMobilePnlTip(price, pnlVal, clientX, clientY) {
+  let tip = document.getElementById('mobile-pnl-tip');
+  if (!tip) return;
+  const gain = pnlVal >= 0;
+  tip.innerHTML =
+    `<span style="color:#94a3b8;font-size:11px">標的</span> ${fmtPrice(price)}<br>` +
+    `<span style="color:#94a3b8;font-size:11px">損益</span> <span style="color:${gain ? '#0a7c4e' : '#c8192b'};font-weight:700">${gain ? '+' : ''}${fmtPnl(pnlVal)}</span>`;
+  // Position above finger, clamped to viewport
+  const W = 120, H = 54;
+  let x = Math.round(clientX - W / 2);
+  let y = Math.round(clientY - H - 16);
+  x = Math.max(8, Math.min(window.innerWidth - W - 8, x));
+  y = Math.max(60, y);
+  tip.style.left = x + 'px';
+  tip.style.top  = y + 'px';
+  tip.classList.remove('hidden');
+  clearTimeout(tip._timer);
+  tip._timer = setTimeout(() => tip.classList.add('hidden'), 3000);
+}
+
 function initChartDesktopCursor() {
   const chartEl = document.getElementById('payoff-chart');
   if (!chartEl) return;
@@ -916,6 +994,9 @@ function initChartTouchGestures() {
   let pan = null;
   let pinch = null;
   const MIN_PINCH_PX = 20; // below this, treat that axis as pure pan (no zoom)
+  const TAP_MAX_PX = 10;   // movement threshold to distinguish tap from pan
+  let tapStart = null;
+  let tapHoverTimer = null;
 
   const getPlotInfo = () => {
     const fl = chartEl._fullLayout;
@@ -980,10 +1061,12 @@ function initChartTouchGestures() {
     if (e.touches.length === 1) {
       pinch = null;
       startPan(e.touches[0], info);
+      tapStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     } else if (e.touches.length === 2) {
       // 1 → 2 finger transition: drop pan, snapshot CURRENT ranges as pinch
       // baseline (ranges already reflect any in-progress pan).
       pan = null;
+      tapStart = null;
       startPinch(e.touches[0], e.touches[1], info);
     }
   }, { passive: false, capture: true });
@@ -993,6 +1076,11 @@ function initChartTouchGestures() {
     const info = getPlotInfo();
     if (!info) return;
 
+    if (tapStart) {
+      const dx = Math.abs(e.touches[0].clientX - tapStart.x);
+      const dy = Math.abs(e.touches[0].clientY - tapStart.y);
+      if (dx > TAP_MAX_PX || dy > TAP_MAX_PX) tapStart = null;
+    }
     if (e.touches.length === 1 && pan) {
       e.preventDefault();
       const f_new = touchPos(e.touches[0], info);
@@ -1059,6 +1147,33 @@ function initChartTouchGestures() {
 
   const onTouchEnd = e => {
     e.stopPropagation();
+
+    // Detect tap: single finger, minimal movement, full lift-off
+    if (tapStart && e.changedTouches.length === 1 && e.touches.length === 0) {
+      const touch = e.changedTouches[0];
+      const info = getPlotInfo();
+      const pnlData = chartEl._pnlData;
+      if (info && pnlData) {
+        const rect = chartEl.getBoundingClientRect();
+        const xpx = touch.clientX - rect.left - info.plotLeft;
+        const dataX = info.rangeX[0] + (xpx / info.plotWidth) * (info.rangeX[1] - info.rangeX[0]);
+        // Find closest price in pnl dataset
+        let minDist = Infinity, closest = null;
+        for (let i = 0; i < pnlData.prices.length; i++) {
+          const d = Math.abs(pnlData.prices[i] - dataX);
+          if (d < minDist) { minDist = d; closest = i; }
+        }
+        if (closest !== null && pnlData.pnl[closest] !== null) {
+          showMobilePnlTip(pnlData.prices[closest], pnlData.pnl[closest],
+                           touch.clientX, touch.clientY);
+          showCursorAt(chartEl, pnlData.prices[closest], pnlData.pnl[closest]);
+          clearTimeout(tapHoverTimer);
+          tapHoverTimer = setTimeout(() => hideCursor(chartEl), 3000);
+        }
+      }
+    }
+    tapStart = null;
+
     if (!e.touches || e.touches.length === 0) {
       pan = null;
       pinch = null;
@@ -1125,13 +1240,13 @@ async function exportStrategyImage() {
     let expLo = Math.min(Math.min(...expPnl), pnlNearZero);
     if (expLo > expHi) { const tmp = expLo; expLo = expHi; expHi = tmp; }
     const netCallDir = legs.reduce((s, l) => l.type === 'call' ? s + (l.direction === 'buy' ? 1 : -1) : s, 0);
-    const fmt = v => (v >= 0 ? '+' : '') + fmtChart(v);
+    const fmt = v => (v >= 0 ? '+' : '') + fmtPnl(v);
     const maxGainLabel = expHi < 0 ? '最小虧損' : '最大獲利';
-    const maxGainStr   = expHi < 0 ? fmtChart(expHi) : (netCallDir > 0 ? '+∞' : fmt(expHi));
+    const maxGainStr   = expHi < 0 ? fmtPnl(expHi) : (netCallDir > 0 ? '+∞' : fmt(expHi));
     const maxLossLabel = expLo > 0 ? '最小獲利' : '最大虧損';
-    const maxLossStr   = expLo > 0 ? fmt(expLo) : (netCallDir < 0 ? '-∞' : fmtChart(expLo));
+    const maxLossStr   = expLo > 0 ? fmt(expLo) : (netCallDir < 0 ? '-∞' : fmtPnl(expLo));
     const breakevenStr = exportBreakevens.length > 0
-      ? exportBreakevens.map(b => fmtChart(b)).join(' / ')
+      ? exportBreakevens.map(b => fmtPrice(b)).join(' / ')
       : 'N/A';
 
     // Export chart without legend
@@ -1205,7 +1320,7 @@ async function exportStrategyImage() {
 
     // Breakeven points
     const beText = exportBreakevens.length > 0
-      ? exportBreakevens.map(b => '@' + fmtChart(b)).join('  ')
+      ? exportBreakevens.map(b => '@' + fmtPrice(b)).join('  ')
       : null;
     drawLegendItem(() => {
       const cx = lx + lineLen / 2, r = Math.round(lineLen * 0.15);
@@ -1220,7 +1335,7 @@ async function exportStrategyImage() {
       ctx.strokeStyle = C.price; ctx.lineWidth = 1.5; ctx.setLineDash([2, 2]);
       ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + lineLen, ly); ctx.stroke();
       ctx.setLineDash([]);
-    }, '當前價格', '@' + fmtChart(S));
+    }, '當前價格', '@' + fmtPrice(S));
 
     // Strategy name
     const strategyName = AppState.activeStrategyName || '自訂策略';
@@ -1244,7 +1359,7 @@ async function exportStrategyImage() {
     const infoY = CHART_H + Math.round(INFO_H * 0.55);
     ctx.font = `bold ${FS.md}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
     ctx.fillStyle = C.text;
-    ctx.fillText(`標的現貨價格: ${fmtChart(S)}`, PAD, infoY);
+    ctx.fillText(`標的現貨價格: ${fmtPrice(S)}`, PAD, infoY);
     if (hasExpiry) {
       const expiries = [...new Set(legs.filter(l => l.expDate).map(l => l.expDate))];
       ctx.font = `${FS.sm}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
@@ -1297,8 +1412,8 @@ async function exportStrategyImage() {
           color: leg.direction === 'buy' ? C.buy : C.sell },
         { text: leg.type === 'call' ? 'Call' : 'Put',
           color: leg.type === 'call' ? C.call : C.put },
-        { text: fmtChart(leg.strike),  color: C.text },
-        { text: fmtChart(leg.premium), color: C.text },
+        { text: fmtPrice(leg.strike),  color: C.text },
+        { text: fmtPnl(leg.premium),   color: C.text },
         ...(hasExpiry ? [{ text: leg.expDate || '—', color: C.muted }] : [])
       ];
 
