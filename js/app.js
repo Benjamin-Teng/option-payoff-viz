@@ -82,7 +82,10 @@ function fmt(n, decimals = 2) {
 
 function fmtChart(v) {
   if (v === null || isNaN(v)) return '—';
-  return Math.abs(v) >= 10000 ? v.toFixed(0) : v.toFixed(2);
+  const a = Math.abs(v);
+  if (a >= 1000) return v.toFixed(0); // 4+ digits: integer
+  if (a >= 100)  return v.toFixed(1); // 3 digits: 1 decimal
+  return v.toFixed(2);                // 1–2 digits: 2 decimals
 }
 
 function getStrikeRange() {
@@ -869,6 +872,176 @@ function initChartResetBtn() {
   });
 }
 
+// ── Custom Touch Gestures: single-finger pan, two-finger pinch (both axes) ──
+// We bypass Plotly's native touch handling (unreliable on mobile and gets
+// confused at gesture transitions) and drive xaxis.range / yaxis.range
+// directly. All touch events are stopPropagation'd at capture phase so
+// Plotly's internal handlers never fire.
+function initChartTouchGestures() {
+  const chartEl = document.getElementById('payoff-chart');
+  if (!chartEl) return;
+
+  let pan = null;
+  let pinch = null;
+  const MIN_PINCH_PX = 20; // below this, treat that axis as pure pan (no zoom)
+
+  const getPlotInfo = () => {
+    const fl = chartEl._fullLayout;
+    if (!fl?.xaxis || !fl?.yaxis) return null;
+    const rect = chartEl.getBoundingClientRect();
+    return {
+      rectLeft: rect.left,
+      rectTop:  rect.top,
+      plotLeft:   fl.xaxis._offset || 0,
+      plotTop:    fl.yaxis._offset || 0,
+      plotWidth:  fl.xaxis._length || rect.width,
+      plotHeight: fl.yaxis._length || rect.height,
+      rangeX: fl.xaxis.range.slice(),
+      rangeY: fl.yaxis.range.slice()
+    };
+  };
+
+  const touchPos = (t, info) => ({
+    x: t.clientX - info.rectLeft - info.plotLeft,
+    y: t.clientY - info.rectTop  - info.plotTop
+  });
+
+  const startPan = (touch, info) => {
+    pan = {
+      f: touchPos(touch, info),
+      rangeX: info.rangeX,
+      rangeY: info.rangeY,
+      plotWidth: info.plotWidth,
+      plotHeight: info.plotHeight
+    };
+  };
+
+  const startPinch = (t1, t2, info) => {
+    pinch = {
+      f1: touchPos(t1, info),
+      f2: touchPos(t2, info),
+      rangeX: info.rangeX,
+      rangeY: info.rangeY,
+      plotWidth: info.plotWidth,
+      plotHeight: info.plotHeight
+    };
+  };
+
+  const clampX = (r0, r1) => {
+    const dRange = chartEl._dataRange;
+    if (!dRange) return [r0, r1];
+    const [dMin, dMax] = dRange;
+    const span = r1 - r0;
+    if (span >= dMax - dMin) return [dMin, dMax];
+    if (r0 < dMin) return [dMin, dMin + span];
+    if (r1 > dMax) return [dMax - span, dMax];
+    return [r0, r1];
+  };
+
+  chartEl.addEventListener('touchstart', e => {
+    // Block Plotly's internal touch handlers from firing.
+    e.stopPropagation();
+    e.preventDefault();
+    const info = getPlotInfo();
+    if (!info) return;
+
+    if (e.touches.length === 1) {
+      pinch = null;
+      startPan(e.touches[0], info);
+    } else if (e.touches.length === 2) {
+      // 1 → 2 finger transition: drop pan, snapshot CURRENT ranges as pinch
+      // baseline (ranges already reflect any in-progress pan).
+      pan = null;
+      startPinch(e.touches[0], e.touches[1], info);
+    }
+  }, { passive: false, capture: true });
+
+  chartEl.addEventListener('touchmove', e => {
+    e.stopPropagation();
+    const info = getPlotInfo();
+    if (!info) return;
+
+    if (e.touches.length === 1 && pan) {
+      e.preventDefault();
+      const f_new = touchPos(e.touches[0], info);
+      const { f, rangeX, rangeY, plotWidth, plotHeight } = pan;
+      const spanX = rangeX[1] - rangeX[0];
+      const spanY = rangeY[1] - rangeY[0];
+      // X: drag right (fx_new > fx) → data range shifts left (r0 decreases)
+      const dDataX = (f.x - f_new.x) / plotWidth * spanX;
+      // Y: pixels increase downward, data increases upward. Drag down
+      // (fy_new > fy) → data range shifts up (r1 increases).
+      const dDataY = (f_new.y - f.y) / plotHeight * spanY;
+      let [x0, x1] = clampX(rangeX[0] + dDataX, rangeX[1] + dDataX);
+      const y0 = rangeY[0] + dDataY;
+      const y1 = rangeY[1] + dDataY;
+      Plotly.relayout(chartEl, {
+        'xaxis.range': [x0, x1],
+        'yaxis.range': [y0, y1]
+      });
+    } else if (e.touches.length === 2 && pinch) {
+      e.preventDefault();
+      const f1n = touchPos(e.touches[0], info);
+      const f2n = touchPos(e.touches[1], info);
+      const { f1, f2, rangeX, rangeY, plotWidth, plotHeight } = pinch;
+
+      // X axis
+      const spanX0 = rangeX[1] - rangeX[0];
+      const dxI = f2.x - f1.x, dxN = f2n.x - f1n.x;
+      let x0, x1;
+      if (Math.abs(dxI) > MIN_PINCH_PX && Math.abs(dxN) > MIN_PINCH_PX) {
+        const newSpanX = spanX0 * Math.abs(dxI / dxN);
+        const dataF1X  = rangeX[0] + (f1.x / plotWidth) * spanX0;
+        x0 = dataF1X - (f1n.x / plotWidth) * newSpanX;
+        x1 = x0 + newSpanX;
+      } else {
+        // Pure horizontal pan component
+        const dDataX = (f1.x - f1n.x) / plotWidth * spanX0;
+        x0 = rangeX[0] + dDataX;
+        x1 = rangeX[1] + dDataX;
+      }
+      [x0, x1] = clampX(x0, x1);
+
+      // Y axis (inverted: pixel 0 = top = rangeY[1])
+      const spanY0 = rangeY[1] - rangeY[0];
+      const dyI = f2.y - f1.y, dyN = f2n.y - f1n.y;
+      let y0, y1;
+      if (Math.abs(dyI) > MIN_PINCH_PX && Math.abs(dyN) > MIN_PINCH_PX) {
+        const newSpanY = spanY0 * Math.abs(dyI / dyN);
+        const dataF1Y  = rangeY[1] - (f1.y / plotHeight) * spanY0;
+        y1 = dataF1Y + (f1n.y / plotHeight) * newSpanY;
+        y0 = y1 - newSpanY;
+      } else {
+        // Pure vertical pan component
+        const dDataY = (f1n.y - f1.y) / plotHeight * spanY0;
+        y0 = rangeY[0] + dDataY;
+        y1 = rangeY[1] + dDataY;
+      }
+
+      Plotly.relayout(chartEl, {
+        'xaxis.range': [x0, x1],
+        'yaxis.range': [y0, y1]
+      });
+    }
+  }, { passive: false, capture: true });
+
+  const onTouchEnd = e => {
+    e.stopPropagation();
+    if (!e.touches || e.touches.length === 0) {
+      pan = null;
+      pinch = null;
+      return;
+    }
+    if (e.touches.length === 1 && pinch) {
+      pinch = null;
+      const info = getPlotInfo();
+      if (info) startPan(e.touches[0], info);
+    }
+  };
+  chartEl.addEventListener('touchend', onTouchEnd, { passive: false, capture: true });
+  chartEl.addEventListener('touchcancel', onTouchEnd, { passive: false, capture: true });
+}
+
 // ── Export Strategy Image ──
 async function exportStrategyImage() {
   const S = AppState.underlyingPrice;
@@ -1240,6 +1413,7 @@ function initApp() {
   initAddLegBtn();
   initClearLegsBtn();
   initChartResetBtn();
+  initChartTouchGestures();
   initExportBtn();
   initPresetTabs();
   initHelpPanel();
