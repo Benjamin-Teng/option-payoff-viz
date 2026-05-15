@@ -101,14 +101,14 @@ function getStrikeRange() {
 
 function getPremiumMax() {
   const S = AppState.underlyingPrice;
-  return S && S > 0 ? parseFloat((S * 0.12).toFixed(2)) : 2000;
+  return S && S > 0 ? parseFloat((S * 0.24).toFixed(2)) : 2000;
 }
 
 function getPremiumStep() {
   const S = AppState.underlyingPrice;
   if (!S || S <= 0) return 1;
   const pmMax = getPremiumMax();
-  return Math.max(0.01, parseFloat((pmMax * 0.001).toFixed(2)));
+  return Math.max(0.01, parseFloat((pmMax * 0.0005).toFixed(2)));
 }
 
 // ── P&L Calculation ──
