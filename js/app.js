@@ -240,6 +240,11 @@ function updateChart() {
   let adaptiveXMin = Math.max(dataMin, focusCenter - viewBuffer);
   let adaptiveXMax = Math.min(dataMax, focusCenter + viewBuffer);
 
+  // Ensure all strikes (turning points) are visible — viewBuffer cap can clip outer legs
+  const strikePadding = S0 * 0.03;
+  adaptiveXMin = Math.max(dataMin, Math.min(adaptiveXMin, minStrike - strikePadding));
+  adaptiveXMax = Math.min(dataMax, Math.max(adaptiveXMax, maxStrike + strikePadding));
+
   // Expand view to include breakevens if they fall outside the structure-based view
   // (e.g. calendar/horizontal spreads where all strikes are at S0)
   const breakevens = findBreakevens(prices, pnl);
