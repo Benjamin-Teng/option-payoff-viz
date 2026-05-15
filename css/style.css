@@ -148,6 +148,16 @@ body {
   touch-action: none;
 }
 
+#payoff-chart .nsewdrag,
+#payoff-chart .drag {
+  cursor: default !important;
+}
+
+body.chart-is-dragging,
+body.chart-is-dragging * {
+  cursor: grabbing !important;
+}
+
 .chart-legend-mobile {
   display: flex;
   flex: 1;

@@ -882,6 +882,19 @@ function initClearLegsBtn() {
 }
 
 // ── Chart Reset Button ──
+function initChartDesktopCursor() {
+  const chartEl = document.getElementById('payoff-chart');
+  if (!chartEl) return;
+  // capture phase fires before Plotly's stopPropagation; target body so
+  // Plotly's full-screen .dragcover also gets the grabbing cursor
+  chartEl.addEventListener('mousedown', () => {
+    document.body.classList.add('chart-is-dragging');
+  }, { capture: true });
+  document.addEventListener('mouseup', () => {
+    document.body.classList.remove('chart-is-dragging');
+  });
+}
+
 function initChartResetBtn() {
   document.getElementById('chart-reset-btn').addEventListener('click', () => {
     if (AppState.chartInitialized) {
@@ -1433,6 +1446,7 @@ function initApp() {
   initClearLegsBtn();
   initChartResetBtn();
   initChartTouchGestures();
+  initChartDesktopCursor();
   initExportBtn();
   initPresetTabs();
   initHelpPanel();
