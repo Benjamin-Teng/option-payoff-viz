@@ -14,10 +14,12 @@
 
 ### 功能特色
 
-- **損益曲線**：即時計算並繪製最多 4 腳的組合策略損益
-- **快速策略**：內建 2-Leg、3-Leg、4-Leg 共 20 種常用策略預設，一鍵套用
-- **Black-Scholes 定價**：有到期日的策略（如 Calendar Spread）使用 BS 模型計算時間價值
-- **損益兩平點**：自動偵測並以綠點標示於圖表轉折處
+- **損益曲線**：即時計算並繪製最多 4 腳的組合策略損益，獲利區淺綠、虧損區淺紅填色
+- **快速策略**：內建 2-Leg、3-Leg、4-Leg 共 26 種常用策略預設，一鍵套用
+- **自適應視窗**：圖表自動對焦到策略關鍵區域，確保所有轉折點（strike）與損益兩平點皆在可視範圍內
+- **互動式縮放與平移**：桌面支援滾輪 / trackpad pinch 縮放、拖曳平移；手機支援雙指 pinch 縮放及平移，單指捲動頁面
+- **Black-Scholes 定價**：有到期日的策略（如水平價差）使用 BS 模型計算時間價值
+- **損益兩平點**：自動偵測並以綠點標示於圖表
 - **Max Gain / Max Loss**：即時顯示策略的最大獲利與最大虧損，無上限時顯示 ±∞
 - **P&L 線性縮放**：以 S=30,000 為基準，依標的價格線性縮放 ±P&L 目標，適用各種標的規模
 - **希臘字母互動說明**：Greeks Explorer 頁面提供 Black-Scholes 公式與希臘字母滑桿計算器
@@ -34,7 +36,8 @@
 | 純前端 | HTML / CSS / JavaScript，無框架、無建置工具 |
 | 圖表 | [Plotly.js](https://plotly.com/javascript/) via CDN |
 | 數學排版 | [KaTeX](https://katex.org/) via CDN |
-| Black-Scholes 定價 | 自製 `bs.js`，用於 Calendar Spread 等含到期日策略的時間價值計算 |
+| 字型 | [Outfit](https://fonts.google.com/specimen/Outfit) + [Noto Sans TC](https://fonts.google.com/noto/specimen/Noto+Sans+TC) via Google Fonts |
+| Black-Scholes 定價 | 自製 `bs.js`，用於水平價差等含到期日策略的時間價值計算 |
 | 圖片輸出 | HTML Canvas 2D API（合成損益圖 + 圖例 + 腳位表格） |
 | 社群預覽 | Open Graph Protocol meta tags + og-image.png |
 | og-image 產生 | Python [Pillow](https://python-pillow.org/)（開發期一次性腳本） |
@@ -75,10 +78,12 @@ An interactive P&L visualization tool for options combination strategies. Built 
 
 ### Features
 
-- **Live P&L Chart**: Real-time payoff curve for up to 4-leg combinations
-- **Strategy Presets**: 20 built-in strategies across 2-Leg, 3-Leg, and 4-Leg categories
+- **Live P&L Chart**: Real-time payoff curve for up to 4-leg combinations, with semi-transparent green/red fill for profit/loss regions
+- **Strategy Presets**: 26 built-in strategies across 2-Leg, 3-Leg, and 4-Leg categories
+- **Adaptive Chart View**: Automatically focuses on the strategy's key region, ensuring all strike turning points and breakeven prices are visible
+- **Interactive Zoom & Pan**: Desktop supports mouse wheel / trackpad pinch zoom and drag-to-pan; mobile supports two-finger pinch zoom and pan, single-finger page scroll
 - **Black-Scholes Pricing**: Calendar-type strategies use BS model for time value calculation
-- **Breakeven Detection**: Automatically marks breakeven points at curve inflection corners
+- **Breakeven Detection**: Automatically marks breakeven points at curve zero-crossings
 - **Max Gain / Max Loss**: Live display of maximum profit and loss; shows ±∞ for unbounded strategies
 - **P&L Scaling**: Linear P&L target based on underlying price (reference: ±300 at S=30,000)
 - **Greeks Calculator**: Interactive sliders for Black-Scholes Greeks on the Greeks Explorer page
@@ -95,6 +100,7 @@ An interactive P&L visualization tool for options combination strategies. Built 
 | Frontend only | HTML / CSS / JavaScript — no framework, no build tool |
 | Chart | [Plotly.js](https://plotly.com/javascript/) via CDN |
 | Math rendering | [KaTeX](https://katex.org/) via CDN |
+| Fonts | [Outfit](https://fonts.google.com/specimen/Outfit) + [Noto Sans TC](https://fonts.google.com/noto/specimen/Noto+Sans+TC) via Google Fonts |
 | Black-Scholes pricing | Custom `bs.js` for time-value calculation in expiry-dated strategies (Calendar Spread etc.) |
 | Image export | HTML Canvas 2D API (composites P&L chart + legend + leg table) |
 | Social preview | Open Graph Protocol meta tags + og-image.png |
