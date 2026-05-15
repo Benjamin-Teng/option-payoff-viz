@@ -348,7 +348,7 @@ function updateChart() {
     displayModeBar: false,
     showTips: false,
     scrollZoom: true,
-    doubleClick: 'reset'
+    doubleClick: false
   };
 
   container._dataRange = [dataMin, dataMax];
