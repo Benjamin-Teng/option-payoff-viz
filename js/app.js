@@ -267,6 +267,13 @@ function updateChart() {
     adaptiveXMax = Math.min(dataMax, Math.max(adaptiveXMax, beMax + beMargin));
   }
 
+  // Ensure the underlying price (orange dot) is always visible
+  if (AppState.underlyingPrice) {
+    const spPad = S0 * 0.06;
+    adaptiveXMin = Math.max(dataMin, Math.min(adaptiveXMin, AppState.underlyingPrice - spPad));
+    adaptiveXMax = Math.min(dataMax, Math.max(adaptiveXMax, AppState.underlyingPrice + spPad));
+  }
+
   // Y range computed over the final adaptive visible X region only
   const visPnl = prices
     .map((p, i) => (p >= adaptiveXMin && p <= adaptiveXMax ? pnl[i] : null))
@@ -459,17 +466,38 @@ function updateChart() {
 
 // ── P&L Stats (Max Gain / Max Loss) ──
 function calcPnlBounds(legs, S) {
-  const expRange = S * 0.3;
-  const pts = 1000;
-  const pnlArr = [];
-  for (let i = 0; i <= pts; i++) {
-    pnlArr.push(calcCombinedPnL(legs, (S - expRange) + 2 * expRange * i / pts));
+  // For piecewise-linear strategies (no expiry), the P&L extrema occur only at:
+  //   1. S ≈ 0          — captures deep-ITM put payoff / naked sell-put worst case
+  //   2. Just below/above each strike — the kink points of the linear segments
+  //   3. S >> all strikes — captures the flat region beyond all strikes (bounded
+  //      strategies like spreads) or the slope of uncapped call strategies
+  const strikes = legs.filter(l => l.strike != null).map(l => l.strike);
+  const maxStrike = strikes.length ? Math.max(...strikes) : S;
+
+  const evalPoints = [0.0001];
+  for (const k of strikes) {
+    evalPoints.push(Math.max(0.0001, k - 0.001));
+    evalPoints.push(k);
+    evalPoints.push(k + 0.001);
   }
-  const pnlNearZero = calcCombinedPnL(legs, 0.0001);
-  let hi = Math.max(Math.max(...pnlArr), pnlNearZero);
-  let lo = Math.min(Math.min(...pnlArr), pnlNearZero);
+  evalPoints.push(maxStrike * 3); // well beyond all strikes
+
+  // BS-priced legs (calendar spreads) produce a curved P&L — add a fine numerical
+  // scan over the full chart range so curved extrema are not missed
+  if (legs.some(l => l.expDate)) {
+    const dataMin = Math.max(1, S * 0.05);
+    const dataMax = S * 3;
+    for (let i = 0; i <= 500; i++) {
+      evalPoints.push(dataMin + (dataMax - dataMin) * i / 500);
+    }
+  }
+
+  const pnlValues = evalPoints.map(p => calcCombinedPnL(legs, p));
+  let hi = Math.max(...pnlValues);
+  let lo = Math.min(...pnlValues);
   if (lo > hi) { const tmp = lo; lo = hi; hi = tmp; }
-  const netCallDir = legs.reduce((s, l) => l.type === 'call' ? s + (l.direction === 'buy' ? 1 : -1) : s, 0);
+  const netCallDir = legs.reduce((s, l) =>
+    l.type === 'call' ? s + (l.direction === 'buy' ? 1 : -1) : s, 0);
   return { hi, lo, netCallDir };
 }
 
