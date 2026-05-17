@@ -75,8 +75,8 @@ const STRATEGY_PRESETS = [
         name: '風險逆轉',
         bounded: false,
         legs: [
-          { dir: 'buy',  type: 'call', premiumFactor: 4, strikePercent: +2 },
-          { dir: 'sell', type: 'put',  premiumFactor: 4, strikePercent: -2 }
+          { dir: 'buy',  type: 'call', premiumFactor: 3.92, strikePercent: +2 },
+          { dir: 'sell', type: 'put',  premiumFactor: 4.08, strikePercent: -2 }
         ]
       },
       {

@@ -158,7 +158,9 @@ function findBreakevens(prices, pnl) {
   const raw = [];
   for (let i = 0; i < pnl.length - 1; i++) {
     const a = pnl[i], b = pnl[i + 1];
-    if ((a > 0) !== (b > 0)) {
+    // Also catch transitions to/from exactly zero (e.g. zero-cost strategies
+    // where a flat P&L=0 zone meets a sloped zone at a strike boundary).
+    if ((a > 0) !== (b > 0) || (a < 0 && b === 0) || (a === 0 && b < 0)) {
       raw.push(prices[i] + (prices[i + 1] - prices[i]) * (-a) / (b - a));
     }
   }
@@ -228,13 +230,20 @@ function updateChart() {
   // Extended data range: 5% to 300% of S0 for deep OTM/ITM panning
   const dataMin = Math.max(1, S0 * 0.05);
   const dataMax = S0 * 3;
-  const prices = [];
-  const pnl = [];
+  const priceSet = [];
   for (let i = 0; i <= CHART_POINTS; i++) {
-    const S = dataMin + (dataMax - dataMin) * i / CHART_POINTS;
-    prices.push(S);
-    pnl.push(calcCombinedPnL(validLegs, S));
+    priceSet.push(dataMin + (dataMax - dataMin) * i / CHART_POINTS);
   }
+  // Include exact strike prices so piecewise-linear P&L is sampled at kink points,
+  // preventing off-by-one-step breakeven interpolation errors.
+  if (!validLegs.some(l => l.expDate)) {
+    for (const { strike } of validLegs) {
+      if (strike > dataMin && strike < dataMax) priceSet.push(strike);
+    }
+    priceSet.sort((a, b) => a - b);
+  }
+  const prices = priceSet;
+  const pnl = prices.map(S => calcCombinedPnL(validLegs, S));
 
   // Adaptive initial view: centre on strikes, buffer based on strike structure
   const strikes = validLegs.map(l => l.strike);
@@ -1254,12 +1263,17 @@ async function exportStrategyImage() {
 
     // Compute breakevens for legend annotations
     const expRange = S * 0.3;
-    const expPrices = [], expPnl = [];
+    const expPrices = [];
     for (let i = 0; i <= CHART_POINTS; i++) {
-      const sp = (S - expRange) + (2 * expRange * i / CHART_POINTS);
-      expPrices.push(sp);
-      expPnl.push(calcCombinedPnL(legs, sp));
+      expPrices.push((S - expRange) + (2 * expRange * i / CHART_POINTS));
     }
+    if (!legs.some(l => l.expDate)) {
+      for (const { strike } of legs) {
+        if (strike > S - expRange && strike < S + expRange) expPrices.push(strike);
+      }
+      expPrices.sort((a, b) => a - b);
+    }
+    const expPnl = expPrices.map(sp => calcCombinedPnL(legs, sp));
     const exportBreakevens = findBreakevens(expPrices, expPnl);
 
     // Max Gain / Max Loss
